@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Recipe_App.Server.Data;
 
@@ -10,9 +11,11 @@ using Recipe_App.Server.Data;
 namespace Recipe_App.Server.Migrations
 {
     [DbContext(typeof(RecipeDatabaseContext))]
-    partial class RecipeDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20260424155909_TagChangedType")]
+    partial class TagChangedType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,11 +35,15 @@ namespace Recipe_App.Server.Migrations
 
                     b.Property<string>("TagId")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TagsTagId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("IngredientId");
 
-                    b.HasIndex("TagId");
+                    b.HasIndex("TagsTagId");
 
                     b.ToTable("Ingredients");
                 });
@@ -117,7 +124,7 @@ namespace Recipe_App.Server.Migrations
                 {
                     b.HasOne("Recipe_App.Server.Models.Tags", "Tags")
                         .WithMany()
-                        .HasForeignKey("TagId")
+                        .HasForeignKey("TagsTagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

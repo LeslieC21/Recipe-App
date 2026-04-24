@@ -9,10 +9,12 @@ namespace Recipe_App.Server.Models
     {
         // FK
         public string RecipeId { get; set; } = string.Empty;
+        [ForeignKey("RecipeId")]
         public RecipeModel Recipe { get; set;} = null!;
 
         // FK
         public string TagId { get; set; } = string.Empty;
+        [ForeignKey("TagId")]
         public Tags Tags { get; set;} = null!;
     }
 }

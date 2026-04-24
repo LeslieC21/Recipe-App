@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Recipe_App.Server.Models
 {
@@ -15,6 +16,7 @@ namespace Recipe_App.Server.Models
 
         // FK
         public string TagId { get; set; } = string.Empty;
+        [ForeignKey("TagId")]
         public Tags Tags { get; set; } = null!;
 
     }
