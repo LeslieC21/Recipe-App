@@ -26,3 +26,9 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/.vs
+/packages/Microsoft.AspNetCore.SpaProxy.10.0.5/build
+/packages
+/Recipe-App.Server/obj
+/Recipe-App.Server/bin
+/recipe-app.client/obj

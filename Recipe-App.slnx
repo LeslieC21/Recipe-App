@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="recipe-app.client/recipe-app.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="Recipe-App.Server/Recipe-App.Server.csproj" />
+</Solution>
