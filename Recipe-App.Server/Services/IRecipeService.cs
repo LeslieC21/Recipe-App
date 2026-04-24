@@ -7,5 +7,8 @@ namespace Recipe_App.Server.Services
     {
         // GET Method - Returns ALL Recipes
         Task<List<RecipeModel>> GetRecipesAsync();
+
+        // POST Method - Create NEW Recipe
+        Task<bool> CreateRecipeAsync();
     }
 }

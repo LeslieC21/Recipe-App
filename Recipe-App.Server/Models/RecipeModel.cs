@@ -4,11 +4,15 @@ namespace Recipe_App.Server.Models
 {
     public class RecipeModel
     {
+        // Constructor to ensure each instance gets its own GUID
+        public RecipeModel()
+        {
+            RecipeId = Guid.NewGuid().ToString();
+        }
+
         [Key]
-        public string RecipeId { get; set; } = Guid.NewGuid().ToString();
+        public string RecipeId { get; set; }
         public string Name { get; set; } = string.Empty;
-        //public string Tag { get; set; } = string.Empty;
-        public string Ingredients { get; set; } = string.Empty;
         public string Instructions { get; set; } = string.Empty;
     }
 }

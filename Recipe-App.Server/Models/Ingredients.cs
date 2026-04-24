@@ -4,11 +4,18 @@ namespace Recipe_App.Server.Models
 {
     public class Ingredients
     {
+        public  Ingredients()
+        {
+           IngredientId = Guid.NewGuid().ToString();
+        }
+
         [Key]
-        public string IngredientId { get; set; } = Guid.NewGuid().ToString();
+        public string IngredientId { get; set; }
         public string Name { get; set; } = string.Empty;
-        // Keep it simple for ingredients - they only get one tag
-        public string IngredientTag { get; set; } = string.Empty;
+
+        // FK
+        public string TagId { get; set; } = string.Empty;
+        public Tags Tags { get; set; } = null!;
 
     }
 }

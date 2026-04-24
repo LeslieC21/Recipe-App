@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Recipe_App.Server.Data;
 
@@ -10,9 +11,11 @@ using Recipe_App.Server.Data;
 namespace Recipe_App.Server.Migrations
 {
     [DbContext(typeof(RecipeDatabaseContext))]
-    partial class RecipeDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20260424144350_Foreign-Keys-Rework")]
+    partial class ForeignKeysRework
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,21 +29,20 @@ namespace Recipe_App.Server.Migrations
                     b.Property<string>("IngredientId")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("IngredientId1")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("IngredientTag")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TagId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TagsTagId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("IngredientId");
 
-                    b.HasIndex("TagsTagId");
+                    b.HasIndex("IngredientId1");
 
                     b.ToTable("Ingredients");
                 });
@@ -56,13 +58,13 @@ namespace Recipe_App.Server.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<string>("Unit")
+                    b.Property<string>("TagsTagId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("RecipeId", "IngredientId");
 
-                    b.HasIndex("IngredientId");
+                    b.HasIndex("TagsTagId");
 
                     b.ToTable("RecipeIngredients");
                 });
@@ -120,32 +122,30 @@ namespace Recipe_App.Server.Migrations
 
             modelBuilder.Entity("Recipe_App.Server.Models.Ingredients", b =>
                 {
-                    b.HasOne("Recipe_App.Server.Models.Tags", "Tags")
+                    b.HasOne("Recipe_App.Server.Models.Ingredients", "Ingredient")
                         .WithMany()
-                        .HasForeignKey("TagsTagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("IngredientId1");
 
-                    b.Navigation("Tags");
+                    b.Navigation("Ingredient");
                 });
 
             modelBuilder.Entity("Recipe_App.Server.Models.RecipeIngredients", b =>
                 {
-                    b.HasOne("Recipe_App.Server.Models.Ingredients", "Ingredient")
-                        .WithMany()
-                        .HasForeignKey("IngredientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Recipe_App.Server.Models.RecipeModel", "Recipe")
                         .WithMany()
                         .HasForeignKey("RecipeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Ingredient");
+                    b.HasOne("Recipe_App.Server.Models.Tags", "Tags")
+                        .WithMany()
+                        .HasForeignKey("TagsTagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Recipe");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("Recipe_App.Server.Models.RecipeTags", b =>
