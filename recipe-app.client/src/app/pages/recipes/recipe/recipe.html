@@ -1,0 +1,16 @@
+<button (click)="toggleRecipeDetails()" class="container">
+  <img src="{{recipe.recipeImgUrl}}" />
+  <h2>{{ recipe.recipeName }}</h2>
+  @if(showRecipeDetails()) {
+  <div class="recipe-details">
+    <hr />
+    <h3>{{ recipe.recipeType }}</h3>
+    <h4>Recipe Steps: </h4>
+    <ul>
+      @for(step of recipe.recipeSteps; track $index) {
+      <li>{{step}}</li>
+      }
+    </ul>
+  </div>
+  }
+</button>

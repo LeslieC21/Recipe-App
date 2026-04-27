@@ -1,0 +1,40 @@
+.header_container {
+    min-height: var(--header-height);
+    background: var(--header-background);
+    box-shadow: var(--shadow-sm);
+}
+
+.header_inner {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header_links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  text-decoration: none;
+  justify-content: flex-end;
+  color: var(--color-text);
+  gap: 3rem;
+}
+
+.header_logo img {
+    height: 80px;
+    aspect-ratio: 3/2;
+    border-radius: 40px;
+}
+
+a {
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+li {
+    list-style-type: none;
+}
