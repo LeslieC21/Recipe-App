@@ -69,7 +69,7 @@ namespace Recipe_App.Server.Services
         public async Task<List<Ingredients>> GetIngredientsByRecipeAsync(string recipeId)
         {
             var ingredientIds = await _context.RecipeIngredients
-                .Where(ri => ri.Equals(recipeId))
+                .Where(ri => ri.RecipeId.Equals(recipeId))
                 .Select(ri => ri.IngredientId)
                 .ToListAsync();
 
@@ -316,6 +316,187 @@ namespace Recipe_App.Server.Services
             await _context.SaveChangesAsync();
 
             // Success!
+            return true;
+        }
+
+        // UPDATE Recipe
+        public async Task<bool> UpdateRecipeAsync(UpdateRecipeRequest request)
+        {
+            // Get the recipe we want to update
+            var existingRecipe = await _context.Recipe
+                .FirstOrDefaultAsync(r => r.RecipeId.Equals(request.RecipeId));
+
+            // Check the recipe exists
+            if (existingRecipe is null)
+                return false;
+
+            // Update the Recipe
+            existingRecipe.Name = request.Name.ToLower();
+            existingRecipe.Instructions = request.Instructions;
+
+            // Save changes to the recipe
+            await _context.SaveChangesAsync();
+
+            // Get the recipeIngredients we want to update
+            var existingRecipeIngredients = await _context.RecipeIngredients
+                .Where(ri => ri.RecipeId.Equals(request.RecipeId))
+                .ToListAsync();
+
+            // Ensure recipeIngredients exists
+            if (existingRecipeIngredients is null)
+                return false;
+
+            // Update the RecipeIngredients
+            var updatedIngredients = existingRecipeIngredients;
+            updatedIngredients = request.Ingredients.Select(i => new RecipeIngredients
+            {
+                RecipeId = request.RecipeId,
+                IngredientId = i.IngredientId,
+                Quantity = i.Quantity,
+                Unit = i.Unit
+            }).ToList();
+
+            // Save changes
+            _context.RecipeIngredients.RemoveRange(existingRecipeIngredients);
+            await _context.RecipeIngredients.AddRangeAsync(updatedIngredients);
+            await _context.SaveChangesAsync();
+
+            // Get the recipeTags that we want to update
+            var existingRecipeTags = await _context.RecipeTags
+                .Where(rt => rt.RecipeId.Equals(request.RecipeId))
+                .ToListAsync();
+
+            // Ensure existing recipe tags exist
+            if (existingRecipeTags is null)
+                return false;
+
+            // Check if the tags we want to put onto the recipe exist
+            var requestedTags = request.Tags.ToList();
+            var validTagIds = await _context.Tags
+                .Where(t => requestedTags.Contains(t.TagId))
+                .Select(t => t.TagId)
+                .ToListAsync();
+            if (validTagIds.Count != requestedTags.Count)
+                return false;
+
+            // Update the RecipeTags
+            var updatedTags = existingRecipeTags;
+            updatedTags = request.Tags.Select(t => new RecipeTags
+            {
+                RecipeId = request.RecipeId,
+                TagId = t
+            }).ToList();
+
+            // Save the changes
+            _context.RecipeTags.RemoveRange(existingRecipeTags);
+            await _context.RecipeTags.AddRangeAsync(updatedTags);
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
+        }
+
+        // UPDATE a Tag
+        public async Task<bool> UpdateTagAsync(UpdateTagRequest request)
+        {
+            // Grab the existing tag
+            var existingTag = await _context.Tags
+                .FirstOrDefaultAsync(t => t.TagId.Equals(request.TagId));
+
+            // Make sure that this tag exists
+            if (existingTag is null)
+                return false;
+
+            // Update the tag
+            existingTag.Name = request.Name;
+            existingTag.Type = request.Type;
+
+            // Save the changes
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
+        }
+
+        // UPDATE an Ingredient
+        public async Task<bool> UpdateIngredientAsync(UpdateIngredientRequest request)
+        {
+            // Grab the existing Ingredient
+            var existingIngredient = await _context.Ingredients
+                .FirstOrDefaultAsync(i => i.IngredientId.Equals(request.IngredientId));
+
+            // Make sure the ingredient exists
+            if (existingIngredient is null)
+                return false;
+
+            // Update the ingredient
+            existingIngredient.Name = request.Name;
+            existingIngredient.TagId = request.TagId;
+
+            // Save the changes
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
+        }
+
+        // DELETE A recipe by Id
+        public async Task<bool> DeleteRecipeAsync(string recipeId)
+        {
+            // Get the recipe
+            var existingRecipe = await _context.Recipe
+                .FirstOrDefaultAsync(r => r.RecipeId.Equals(recipeId));
+            var existingRecipeIngredients = await _context.RecipeIngredients
+                .FirstOrDefaultAsync(r => r.RecipeId.Equals(recipeId));
+            var existingRecipeTags = await _context.RecipeTags
+                .FirstOrDefaultAsync(rt => rt.RecipeId.Equals(recipeId));
+
+            if (existingRecipe is null || 
+                existingRecipeIngredients is null ||
+                existingRecipeTags is null)
+                return false;
+
+            // Delete the recipe
+            _context.Remove(existingRecipe);
+            _context.Remove(existingRecipeIngredients);
+            _context.Remove(existingRecipeTags);
+            await _context.SaveChangesAsync();
+
+            // Success
+            return true;
+        }
+
+        public async Task<bool> DeleteTagAsync(string tagId)
+        {
+            // Get the tag
+            var existingTag = await _context.Tags
+                .FirstOrDefaultAsync(t => t.TagId.Equals(tagId));
+
+            if (existingTag is null)
+                return false;
+
+            // Delete the tag
+            _context.Remove(existingTag);
+            await _context.SaveChangesAsync();
+
+            // Success
+            return true;
+        }
+
+        public async Task<bool> DeleteIngredientAsync(string ingredientId)
+        {
+            // Get the tag
+            var existingIngredient = await _context.Ingredients
+                .FirstOrDefaultAsync(t => t.TagId.Equals(ingredientId));
+
+            if (existingIngredient is null)
+                return false;
+
+            // Delete the tag
+            _context.Remove(existingIngredient);
+            await _context.SaveChangesAsync();
+
+            // Success
             return true;
         }
     }

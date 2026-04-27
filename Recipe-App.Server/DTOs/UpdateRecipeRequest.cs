@@ -1,10 +1,10 @@
-using Recipe_App.Server.Models;
+﻿using Recipe_App.Server.Models;
 
 namespace Recipe_App.Server.DTOs
 {
-    public class CreateRecipeRequest
+    public class UpdateRecipeRequest
     {
-        // Later we could have each recipe also hold a photo of the recipe
+        public string RecipeId { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Instructions { get; set; } = string.Empty;
 

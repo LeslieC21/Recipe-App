@@ -46,5 +46,25 @@ namespace Recipe_App.Server.Services
         Task<bool> CreateIngredientAsync(CreateIngredientRequest request);
         // Create NEW Recipe
         Task<bool> CreateRecipeAsync(CreateRecipeRequest request);
+
+
+        // PUT METHODS
+
+        // UPDATE Recipe
+        Task<bool> UpdateRecipeAsync(UpdateRecipeRequest request);
+        // UPDATE Tag
+        Task<bool> UpdateTagAsync(UpdateTagRequest request);
+        // UPDATE Ingredient
+        Task<bool> UpdateIngredientAsync(UpdateIngredientRequest request);
+
+
+        // DELETE Methods
+
+        // Delete Recipe
+        Task<bool> DeleteRecipeAsync(string recipeId);
+        // Delete Tag
+        Task<bool> DeleteTagAsync(string tagId);
+        // Delete Ingredient
+        Task<bool> DeleteIngredientAsync(string ingredientId);
     }
 }

@@ -148,10 +148,25 @@ namespace Recipe_App.Server.Controllers
 
 
         // Update a Recipe
+        [HttpPut("Update/Recipe")]
+        public async Task<ActionResult<bool>> UpdateRecipeAsync(UpdateRecipeRequest request)
+        {
+            return (Ok(await service.UpdateRecipeAsync(request)));
+        }
 
         // Update a Tag
+        [HttpPut("Update/Tag")]
+        public async Task<ActionResult<bool>> UpdateTagAsync(UpdateTagRequest request)
+        {
+            return (Ok(await service.UpdateTagAsync(request)));
+        }
 
         // Update an ingredient
+        [HttpPut("Update/Ingredient")]
+        public async Task<ActionResult<bool>> UpdateIngredientAsync(UpdateIngredientRequest request)
+        {
+            return (Ok(await service.UpdateIngredientAsync(request)));
+        }
 
 
 
@@ -161,9 +176,24 @@ namespace Recipe_App.Server.Controllers
 
 
         // Delete a recipe
+        [HttpDelete("Delete/Recipe/{recipeId}")]
+        public async Task<ActionResult<bool>> DeleteRecipeAsync(string recipeId)
+        {
+            return (Ok(await service.DeleteRecipeAsync(recipeId)));
+        }
 
         // Delete a Tag
+        [HttpDelete("Delete/Tag/{tagId}")]
+        public async Task<ActionResult<bool>> DeleteTagAsync(string tagId)
+        {
+            return (Ok(await service.DeleteTagAsync(tagId)));
+        }
 
         // Delete an ingredient
+        [HttpDelete("Delete/Ingredient/{ingredientId}")]
+        public async Task<ActionResult<bool>> DeleteIngredientAsync(string ingredientId)
+        {
+            return (Ok(await service.DeleteIngredientAsync(ingredientId)));
+        }
     }
 }
