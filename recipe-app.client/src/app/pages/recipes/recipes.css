@@ -1,17 +1,19 @@
 .recipes-container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-evenly;
 }
 
 header {
-    text-align: center;
-    color: var(--color-text);
-    margin: 2rem;
+  text-align: center;
+  color: var(--color-text);
+  text-shadow: var(--shadow-md);
+  font-family: var(--font-alt);
+  font-size: 150%;
+  margin: 2rem;
 }
 
 .container {
-  border: 1px solid white;
+  background: var(--color-bg);
   min-height: 85vh;
   padding: 1rem;
   margin: 1rem;
@@ -19,11 +21,12 @@ header {
 
 .recipe {
   background-color: #B2AC88;
+  box-shadow: var(--shadow-sm);
   text-align: center;
-  height: auto;
-  width: auto;
   padding: 0.5rem;
   margin: 1rem;
+  height: auto;
+  width: 100%;
 }
 
 /* Tablets Portrait */
@@ -33,17 +36,24 @@ header {
 
 /* Tablets Landscape */
 @media(min-width: 768px) {
+  .container {
+    margin: 1.5rem 1rem 1.5rem 1rem;
+  }
+
   .recipes-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
+    display: grid;
+    grid-template-columns: repeat(3, calc((100% - 4rem) / 3));
+    gap: 2rem;
+    box-sizing: border-box;
+/*    Each Item is only as tall as ITS content- regardless of neighbours*/
+    align-items: start;
   }
 
   .recipe {
-     height: 50%;
-     width: auto;
-     padding: 0.5rem;
-     margin: 1rem;
+    max-height: 100%;
+    padding: 0.5rem;
+    margin: 0;
+    box-sizing: border-box;
   }
 }
 

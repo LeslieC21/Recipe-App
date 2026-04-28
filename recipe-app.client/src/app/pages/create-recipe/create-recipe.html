@@ -1,0 +1,67 @@
+<div class="container">
+  <header>
+    <h1>Upload A Recipe</h1>
+  </header>
+  <main>
+    <form>
+      <div class="form_group">
+        <input type="text" placeholder="Recipe Name" />
+      </div>
+      <!--Skip-->
+      <div class="form_group">
+        <div class="form_group-title">
+          <label for="stepCounter">How many steps in this recipe?</label>
+        </div>
+        <input type="number" id="stepCounter" (change)="addSteps()" [formField]="recipeForm.recipeTotalSteps" />
+        @for(step of recipeForm.recipeSteps; track $index) {
+        <textarea id="{{$index}}" placeholder="Step {{$index + 1}} Instructions"></textarea>
+        }
+      </div>
+
+      <div class="form_group">
+        <div class="form_group-title">
+          <label for="tagCounter">How many tags does this recipe have?</label>
+          <button>Add A New Tag</button>
+        </div>
+          <input type="number" id="tagCounter" (change)="addSteps()" [formField]="recipeForm.recipeTotalTags" />
+          @for(step of recipeForm.recipeTags; track $index) {
+          <label class="typeCounter">Tag {{$index + 1}}</label>
+          <select>
+            <!--Show All Tags-->
+            <option>Breakfast</option>
+            <option>Lunch</option>
+            <option>Dinner</option>
+            <option>Desert</option>
+          </select>
+          }
+        </div>
+
+      <div class="form_group">
+        <div class="form_group-title">
+          <label for="ingredientCounter">How Many Ingredients in this recipe?</label>
+          <button>Add New Ingredient</button>
+        </div>
+        <input type="number" id="ingredientCounter" (change)="addSteps()" [formField]="recipeForm.recipeTotalIngredients" />
+        @for(step of recipeForm.recipeIngredients; track $index) {
+        <label class="typeCounter">Ingredient {{$index + 1}}</label>
+        <div class="form_ingredient">
+          <select>
+            <!--Show All Ingredients-->
+            <option>Milk</option>
+            <option>Eggs</option>
+            <option>Cereal</option>
+            <option>Bacon</option>
+          </select>
+          <input type="number" placeholder="Measurement" />
+          <select>
+            <option>Cups</option>
+            <option>TBSP</option>
+            <option>TSP</option>
+            <option>Gallon</option>
+          </select>
+        </div>
+        }
+      </div>
+</form>
+  </main>
+</div>

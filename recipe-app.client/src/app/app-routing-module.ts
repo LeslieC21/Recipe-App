@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { Home } from './pages/home/home';
 import { Recipes } from './pages/recipes/recipes';
+import { CreateRecipe } from './pages/create-recipe/create-recipe';
 
 export const routes: Routes = [
   {
@@ -17,6 +18,11 @@ export const routes: Routes = [
   {
     path: 'Recipe-List',
     component: Recipes,
+    data: { showNavbar: true }
+  },
+  {
+    path: 'Create-Recipe',
+    component: CreateRecipe,
     data: { showNavbar: true }
   }
 ]

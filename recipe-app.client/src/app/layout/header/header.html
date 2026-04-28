@@ -2,7 +2,7 @@
   <div class="header_inner">
     <div class="header_logo">
       <a [routerLink]="['/Home']">
-        <img src="/RecipeAppLogo.gif" alt="Ramen Logo" height="80px" />
+        <img src="/RecipeAppLogo.gif" alt="Ramen Logo"/>
       </a>
     </div>
     <div class="header_desktop">
@@ -13,7 +13,7 @@
           </a>
         </li>
         <li>
-          <a [routerLink]="['/Recipe-List']">
+          <a [routerLink]="['/Create-Recipe']">
             Upload Recipe
           </a>
         </li>
@@ -27,10 +27,51 @@
             Create New Tag
           </a>
         </li>
+        <li>
+          <a [routerLink]="['/Recipe-List']">
+            Favorite Recipes
+          </a>
+        </li>
       </ul>
     </div>
     <div class="header_mobile">
-
+      <button class="header_menu_btn" (click)="toggleSidebar()">
+        <img src="/navbar.png" alt="Navbar Button" width="60" height="60" />
+      </button>
     </div>
   </div>
+  @if(isSidebarVisible()) {
+  <div class="header_backdrop" (click)="toggleSidebar()"></div>
+      <div class="header_drawer" animate.enter="enter-animation" animate.exit="exit-animation">
+        <div class="header_drawer-inner">
+          <button class="header_close" (click)="toggleSidebar()">
+            <span aria-hidden="true">×</span>
+          </button>
+          <div class="header_drawer_logo">
+            <img src="/RecipeAppLogo.gif" alt="Ramen Logo" />
+            <h1>Delicious Recipes</h1>
+          </div>
+          <ul class="header_drawer-nav">
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Home']">Home</button>
+            </li>
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Browse Recipes</button>
+            </li>
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Create-Recipe']">Upload Recipe</button>
+            </li>
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Upload Ingredient(s)</button>
+            </li>
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Create New Tag</button>
+            </li>
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Favorite Recipes</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+  }
 </div>

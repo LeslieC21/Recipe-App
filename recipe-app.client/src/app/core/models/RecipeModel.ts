@@ -3,5 +3,6 @@ export interface RecipeModel {
   recipeImgUrl: string,
   recipeName: string,
   recipeType: string,
-  recipeSteps: string[]
+  recipeSteps: string[],
+  recipeIngredients: string[][]
 }
