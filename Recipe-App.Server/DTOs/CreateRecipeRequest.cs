@@ -6,6 +6,7 @@ namespace Recipe_App.Server.DTOs
     {
         // Later we could have each recipe also hold a photo of the recipe
         public string Name { get; set; } = string.Empty;
+        public IFormFile? Image { get; set; }
         public string Instructions { get; set; } = string.Empty;
 
         // Not a row in the table HOWEVER we need it to add a row in the conjunction table

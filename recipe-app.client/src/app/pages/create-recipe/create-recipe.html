@@ -5,16 +5,25 @@
   <main>
     <form>
       <div class="form_group">
-        <input type="text" placeholder="Recipe Name" />
+        <input type="text" placeholder="Recipe Name" [formField]="recipeForm.recipeName" />
       </div>
-      <!--Skip-->
+
+      <div class="form_group">
+        <div class="form_group-title">
+          <label for="file-input">Upload Recipe Image</label>
+          <label for="file-input" class="custom-file-upload">Choose File</label>
+          <input type="file" id="file-input" accept=".jpg, .jpeg, .png, .webp, .svg" class="form_group-file" (change)="onFileSelected($event)"/>
+        </div>
+        <p class="form_group-file-text" (click)="onFileRemove()"> × {{ recipeForm.recipeImageUrl().value() }}</p>
+      </div>
+
       <div class="form_group">
         <div class="form_group-title">
           <label for="stepCounter">How many steps in this recipe?</label>
         </div>
-        <input type="number" id="stepCounter" (change)="addSteps()" [formField]="recipeForm.recipeTotalSteps" />
+        <input type="number" id="stepCounter" (change)="addSteps()" [formField]="recipeForm.recipeTotalSteps" oninput="if (this.value < 0) this.value = 0;" />
         @for(step of recipeForm.recipeSteps; track $index) {
-        <textarea id="{{$index}}" placeholder="Step {{$index + 1}} Instructions"></textarea>
+        <textarea (change)="updateSteps($index, $event)" placeholder="Step {{$index + 1}} Instructions"></textarea>
         }
       </div>
 
@@ -23,45 +32,46 @@
           <label for="tagCounter">How many tags does this recipe have?</label>
           <button>Add A New Tag</button>
         </div>
-          <input type="number" id="tagCounter" (change)="addSteps()" [formField]="recipeForm.recipeTotalTags" />
-          @for(step of recipeForm.recipeTags; track $index) {
-          <label class="typeCounter">Tag {{$index + 1}}</label>
-          <select>
-            <!--Show All Tags-->
-            <option>Breakfast</option>
-            <option>Lunch</option>
-            <option>Dinner</option>
-            <option>Desert</option>
-          </select>
-          }
-        </div>
+        <input type="number" id="tagCounter" (change)="addTags()" [formField]="recipeForm.recipeTotalTags" oninput="if (this.value < 0) this.value = 0;" />
+        @for(step of recipeForm.recipeTags; track $index) {
+        <label class="typeCounter">Tag {{$index + 1}}</label>
+        <select (change)="updateTags($index, $event)">
+          <!--Show All Tags-->
+          <option value="Breakfast" selected>Breakfast</option>
+          <option value="Lunch">Lunch</option>
+          <option value="Dinner">Dinner</option>
+          <option value="Desert">Desert</option>
+        </select>
+        }
+      </div>
 
       <div class="form_group">
         <div class="form_group-title">
           <label for="ingredientCounter">How Many Ingredients in this recipe?</label>
           <button>Add New Ingredient</button>
         </div>
-        <input type="number" id="ingredientCounter" (change)="addSteps()" [formField]="recipeForm.recipeTotalIngredients" />
+        <input type="number" id="ingredientCounter" (change)="addIngredients()" [formField]="recipeForm.recipeTotalIngredients" oninput="if (this.value < 0) this.value = 0;" />
         @for(step of recipeForm.recipeIngredients; track $index) {
         <label class="typeCounter">Ingredient {{$index + 1}}</label>
         <div class="form_ingredient">
-          <select>
+          <select (change)="updateIngredientID($index, $event)">
             <!--Show All Ingredients-->
-            <option>Milk</option>
-            <option>Eggs</option>
-            <option>Cereal</option>
-            <option>Bacon</option>
+            <option value="Milk">Milk</option>
+            <option value="Eggs">Eggs</option>
+            <option value="Cereal">Cereal</option>
+            <option value="Bacon">Bacon</option>
           </select>
-          <input type="number" placeholder="Measurement" />
-          <select>
-            <option>Cups</option>
-            <option>TBSP</option>
-            <option>TSP</option>
-            <option>Gallon</option>
+          <input (change)="updateIngredientQuantity($index, $event)" type="number" placeholder="Measurement" />
+          <select (change)="updateIngredientUnit($index, $event)">
+            <option value="Cups">Cups</option>
+            <option value="TBSP">TBSP</option>
+            <option value="TSP">TSP</option>
+            <option value="Gallon">Gallon</option>
           </select>
         </div>
         }
       </div>
-</form>
+      <button class="form_submit-button" (click)="submitRecipeForm($event)">Submit</button>
+    </form>
   </main>
 </div>

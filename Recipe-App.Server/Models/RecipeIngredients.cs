@@ -18,6 +18,10 @@ namespace Recipe_App.Server.Models
         public Ingredients Ingredient { get; set; } = null!;
 
         public int Quantity { get; set; } = 0;
-        public string Unit { get; set; } = string.Empty;
+
+        // FK
+        public string UnitId { get; set; } = string.Empty;
+        [ForeignKey("UnitId")]
+        public Units Unit { get; set; } = null!;
     }
 }

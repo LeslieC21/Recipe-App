@@ -10,5 +10,6 @@ namespace Recipe_App.Server.Data
         public virtual DbSet<RecipeModel> Recipe { get; set; }
         public virtual DbSet<RecipeTags> RecipeTags { get; set; }
         public virtual DbSet<Tags> Tags { get; set; }
+        public virtual DbSet<Units> Units { get; set; }
     }
 }

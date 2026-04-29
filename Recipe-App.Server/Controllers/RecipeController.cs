@@ -136,7 +136,7 @@ namespace Recipe_App.Server.Controllers
 
         // Create a NEW Recipe
         [HttpPost("New/Recipe")]
-        public async Task<ActionResult<bool>> CreateRecipeAsync(CreateRecipeRequest request)
+        public async Task<ActionResult<bool>> CreateRecipeAsync([FromForm] CreateRecipeRequest request)
         {
             return (Ok(await service.CreateRecipeAsync(request)));
         }

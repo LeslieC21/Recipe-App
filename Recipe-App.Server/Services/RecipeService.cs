@@ -279,6 +279,10 @@ namespace Recipe_App.Server.Services
 
 
 
+            // Resize image - ImageSharp
+
+            // Convert to byte[]
+            // Use MemoryStream and IFormFile.CopyToAsync async method from Microsoft
 
             // Create new recipe
             var newRecipe = new RecipeModel
