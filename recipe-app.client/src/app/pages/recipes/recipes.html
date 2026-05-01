@@ -2,18 +2,33 @@
   <header>
     <h1>Delicious Recipes</h1>
   </header>
+  @if(viewSingleRecipe() == null) {
   <div class="recipes-container">
     <div class="recipe">
-      <app-recipe [recipe]="exampleData1"></app-recipe>
+      <app-recipe [recipe]="exampleData1" [viewAlone]="false"></app-recipe>
     </div>
     <div class="recipe">
-      <app-recipe [recipe]="exampleData1"></app-recipe>
+      <app-recipe [recipe]="exampleData1" [viewAlone]="false"></app-recipe>
     </div>
     <div class="recipe">
-      <app-recipe [recipe]="exampleData1"></app-recipe>
+      <app-recipe [recipe]="exampleData1" [viewAlone]="false"></app-recipe>
     </div>
     <div class="recipe">
-      <app-recipe [recipe]="exampleData1"></app-recipe>
+      <app-recipe [recipe]="exampleData1" [viewAlone]="false"></app-recipe>
     </div>
+    @for(recipe of recipes(); track recipe.recipeId) {
+    <div class="recipe">
+      <app-recipe [recipe]="recipe" [viewAlone]="false" (expandedRecipe)="toggleSingleRecipeView($event)"></app-recipe>
+    </div>
+    }
   </div>
-</div>
+  } @else {
+  @for(recipe of recipes(); track recipe.recipeId) {
+  @if(recipe.recipeId === viewSingleRecipe()) {
+  <div class="recipe">
+    <app-recipe [recipe]="recipe" [viewAlone]="true" (expandedRecipe)="toggleSingleRecipeView($event)"></app-recipe>
+  </div>
+  }
+    }
+    }
+  </div>

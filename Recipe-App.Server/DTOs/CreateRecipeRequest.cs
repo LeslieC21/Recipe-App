@@ -1,4 +1,5 @@
 using Recipe_App.Server.Models;
+using SixLabors.ImageSharp.Formats;
 
 namespace Recipe_App.Server.DTOs
 {
@@ -12,6 +13,6 @@ namespace Recipe_App.Server.DTOs
         // Not a row in the table HOWEVER we need it to add a row in the conjunction table
         public string[] Tags { get; set; } = Array.Empty<string>();
 
-        public IngredientInfoModel[] Ingredients { get; set; } = Array.Empty<IngredientInfoModel>();
+        public IngredientInfoRequest[] Ingredients { get; set; } = Array.Empty<IngredientInfoRequest>();
     }
 }

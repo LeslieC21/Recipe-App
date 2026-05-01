@@ -13,5 +13,6 @@ namespace Recipe_App.Server.Models
         [Key]
         public string UnitId { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string Abbreviation { get; set; } = string.Empty;
     }
 }

@@ -1,12 +1,18 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject, DestroyRef } from '@angular/core';
 import { form, required, FormField } from '@angular/forms/signals';
+import { Subscription } from 'rxjs';
 
 import { IngredientInfoModel } from '../../core/models/IngredientInfoModel';
-import { CreateRecipeModel } from '../../core/models/CreateRecipeModel';
+import { UnitModel } from '../../core/models/UnitModel';
+import { IngredientModel } from '../../core/models/IngredientModel';
+import { TagModel } from '../../core/models/TagModel';
+import { RecipeService } from '../../core/services/RecipeService';
+import { CapitalizePipe } from '../../core/services/CapitalizePipe';
+import { Recipe } from '../recipes/recipe/recipe';
 
 interface RecipeModel {
   recipeName: string;
-  recipeImageUrl: string;
+  recipeImage: File | null;
   recipeTotalSteps: number;
   recipeSteps: string[];
   recipeTotalTags: number;
@@ -17,15 +23,24 @@ interface RecipeModel {
 
 @Component({
   selector: 'app-create-recipe',
-  imports: [FormField],
+  imports: [FormField, CapitalizePipe],
   templateUrl: './create-recipe.html',
   styleUrl: './create-recipe.css',
 })
 export class CreateRecipe {
+  // Injects
+  RService = inject(RecipeService);
+  destoryRef = inject(DestroyRef);
+
+  // Arrays For Units/Tags/Ingredients For the Dropdowns
+  units = signal<UnitModel[]>([]);
+  tags = signal<TagModel[]>([]);
+  ingredients = signal<IngredientModel[]>([]);
+
   // Form and Model
   recipeModel = signal<RecipeModel>({
     recipeName: '',
-    recipeImageUrl: 'No File Selected...',
+    recipeImage: null,
     recipeTotalSteps: 0,
     recipeSteps: [],
     recipeTotalTags: 0,
@@ -42,21 +57,19 @@ export class CreateRecipe {
   })
 
   onFileSelected(event: Event) {
-    //const input = (event.target as HTMLInputElement).value;
-    //console.log(input)
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    var file = input.files?.[0] ?? null;
 
     // Update the value
     this.recipeModel.update(current => {
-      return { ...current, recipeImageUrl: file?.name ?? 'No File Selected...'}
+      return { ...current, recipeImage: file }
     });
   }
 
   onFileRemove() {
-    // Remove the file name in recipeImageURL
+    // Remove the file in recipeImageURL
     this.recipeModel.update(current => {
-      return { ...current, recipeImageUrl: 'No File Selected...'}
+      return { ...current, recipeImage: null }
     })
   }
 
@@ -64,22 +77,36 @@ export class CreateRecipe {
     // Set the array length to total steps
     // then set the array values to an empty string, since the input is a textarea
     this.recipeModel().recipeSteps.length = this.recipeModel().recipeTotalSteps;
-    this.recipeModel().recipeSteps.fill("");
+    // Only give empty string values to the indexs that are undefined aka they didnt recieve user input
+    for (let step of this.recipeModel().recipeSteps) {
+      if (step == undefined) {
+        step = '';
+      }
+    }
   }
 
   addTags() {
-    // Just set the array lengths - then set the array values to the first option in the api responces
+    // Just set the array lengths
     this.recipeModel().recipeTags.length = this.recipeModel().recipeTotalTags;
-    this.recipeModel().recipeTags.fill("");
+    for (let tag of this.recipeModel().recipeTags) {
+      if (tag == undefined) {
+        tag = '';
+      }
+    }
   }
 
   addIngredients() {
+    // Set the array length
     this.recipeModel().recipeIngredients.length = this.recipeModel().recipeTotalIngredients;
-    this.recipeModel().recipeIngredients.fill({
-      IngredientId: '',
-      Quantity: 0,
-      Unit: ''
-    })
+    for (let ing of this.recipeModel().recipeIngredients) {
+      if (ing == undefined) {
+        ing = {
+          IngredientId: '',
+          Quantity: 0,
+          UnitId: ''
+        }
+      }
+    }
   }
 
   updateSteps(index: number, event: Event) {
@@ -127,7 +154,7 @@ export class CreateRecipe {
     const value = (event.target as HTMLSelectElement).value;
     this.recipeModel.update(current => {
       const ingredients = [...current.recipeIngredients];
-      ingredients[index] = { ...ingredients[index], Unit: value };
+      ingredients[index] = { ...ingredients[index], UnitId: value };
       return { ...current, recipeIngredients: ingredients }
     });
   }
@@ -136,30 +163,85 @@ export class CreateRecipe {
     // ADD IMAGE TO API CALL LATER
     event.preventDefault();
 
-    if (this.recipeForm().invalid())
+    if (this.recipeForm().invalid()) {
+      console.log("Couldnt be submitted... ;c");
       return;
-
-    // Add all the instructions into one string - seperated by | 
-    var recipeInstructions = '';
-    for (let step of this.recipeModel().recipeSteps) {
-      // If we are at the last step dont put a divider
-      if (this.recipeModel().recipeSteps.indexOf(step) == this.recipeModel().recipeSteps.length-1)
-        recipeInstructions += step;
-      else
-        recipeInstructions += step + "|";
     }
 
-    // Create the model
-    const createRecipeModel: CreateRecipeModel = {
-      Name: this.recipeForm.recipeName().value(),
-      Image: this.recipeForm.recipeImageUrl().value(),
-      Instructions: recipeInstructions,
-      Tags: this.recipeForm.recipeTags().value(),
-      Ingredients: this.recipeForm.recipeIngredients().value()
-    };
+    // Add all the instructions into one string - seperated by | 
+    var recipeInstructions = this.recipeModel().recipeSteps.join("|");
+    console.log(recipeInstructions);
+
+    // Build FormData to send in the API Req
+    const formData = new FormData();
+    formData.append('Name', this.recipeForm.recipeName().value());
+    formData.append('Instructions', recipeInstructions);
+
+    // Check if the image exists
+    const image = this.recipeModel().recipeImage;
+    if (image)
+      formData.append('Image', image);
+
+    // Add Tags
+    this.recipeModel().recipeTags.forEach(tag => {
+      formData.append('Tags', tag);
+    });
+
+    // Add Ingredients
+    this.recipeModel().recipeIngredients.forEach((ingredient, index) => {
+      formData.append(`Ingredients[${index}][IngredientId]`, ingredient.IngredientId);
+      formData.append(`Ingredients[${index}][Quantity]`, ingredient.Quantity.toString());
+      formData.append(`Ingredients[${index}][UnitId]`, ingredient.UnitId);
+    });
+
+    console.log("We Submitted... ");
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+
 
     // API Call
     // Server is using [FromForm] this means we need to send multipart/form-data instead of JSON.
-    // Instead of JSON.stringify() use FormData
+    //const subscription = this.RService.newRecipe(formData).subscribe(x => console.log(x));
+    //this.destroySubscription(subscription);
+  }
+
+  // Method to populate the drop downs for units
+  getUnits() {
+    const subscription = this.RService.getUnits().subscribe((x) => {
+      this.units.set(x);
+    });
+    this.destroySubscription(subscription);
+  }
+
+  // Method to populate the drop downs for ingredient
+  getIngredients() {
+    const subscription = this.RService.getIngredients().subscribe(x => {
+      this.ingredients.set(x);
+      console.log(this.ingredients())
+    });
+    this.destroySubscription(subscription);
+  }
+
+  // Method to populate the drop downs for tags
+  getRecipeTags() {
+    const subscription = this.RService.getTagsByRecipeType().subscribe(x => {
+      this.tags.set(x);
+    });
+    this.destroySubscription(subscription);
+  }
+
+  // Method that is called by other methods to destroy their subscription
+  destroySubscription(subscription: Subscription) {
+    this.destoryRef.onDestroy(() => {
+      subscription.unsubscribe();
+    });
+  }
+
+  ngOnInit() {
+    // Populate all dropdowns - Units/Tags/Ingredients
+    this.getUnits();
+    this.getIngredients();
+    this.getRecipeTags();
   }
 }

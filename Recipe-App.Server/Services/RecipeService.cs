@@ -2,6 +2,8 @@
 using Recipe_App.Server.Data;
 using Recipe_App.Server.DTOs;
 using Recipe_App.Server.Models;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace Recipe_App.Server.Services
 {
@@ -14,85 +16,342 @@ namespace Recipe_App.Server.Services
 
     public class RecipeService(RecipeDatabaseContext _context) : IRecipeService
     {
-        // CONSTANTS
-        private const int TAGTYPE_NOTYPE = 0;
-        private const int TAGTYPE_RECIPE = 1;
-        private const int TAGTYPE_INGREDIENT = 2;
-
-
-
         // GET METHODS
 
+        
 
 
         // Return ALL Recipes
-        public async Task<List<RecipeModel>> GetRecipesAsync()
+        public async Task<List<GetRecipeResponse>> GetRecipesAsync()
         {
-            return await _context.Recipe.OrderBy(r => r.Name).ToListAsync();
+            // Get ALL Recipes
+            var recipes = await _context.Recipe.ToListAsync();
+
+            // All Ingredients
+            var ingredients = await _context.RecipeIngredients
+                .Join(
+                    _context.Ingredients,
+                    ri => ri.IngredientId,
+                    i => i.IngredientId,
+                    (ri, i) => new
+                    {
+                        ri.RecipeId,
+                        IngredientName = i.Name,
+                        i.IngredientId,
+                        ri.Quantity,
+                        ri.UnitId,
+                    }
+                )
+                .Join(
+                    _context.Units,
+                    i => i.UnitId,
+                    u => u.UnitId,
+                    (i, u) => new
+                    {
+                        i.RecipeId,
+                        i.IngredientName,
+                        i.IngredientId,
+                        i.Quantity,
+                        UnitName = u.Name,
+                        UnitAbbreviation = u.Abbreviation,
+                    }
+                )
+                .ToListAsync();
+
+
+            // All RecipeTags
+            var recipeTags = await _context.RecipeTags
+                .Join(
+                    _context.Tags,
+                    rt => rt.TagId,
+                    t => t.TagId,
+                    (rt, t) => new 
+                    { 
+                        rt.RecipeId,
+                        TagName = t.Name
+                    }
+                )
+                .ToListAsync();
+
+
+            var result = recipes.Select(recipe => new GetRecipeResponse
+            {
+                RecipeId = recipe.RecipeId,
+                Image = recipe.RecipeImage,
+                Name = recipe.Name,
+                Instructions = recipe.Instructions,
+                Tags = recipeTags
+                    .Where(rt => rt.RecipeId.Equals(recipe.RecipeId))
+                    .Select(rt => rt.TagName)
+                    .ToArray(),
+                Ingredients = ingredients
+                    .Where(i => i.RecipeId.Equals(recipe.RecipeId))
+                    .Select(i => new GetRecipeIngredientResponse
+                    {
+                        IngredientId = i.IngredientId,
+                        IngredientName = i.IngredientName,
+                        IngredientQuantity = i.Quantity,
+                        IngredientUnitName = i.UnitName,
+                        IngredientUnitAbbreviation = i.UnitAbbreviation
+                    })
+                    .ToArray()
+            })
+                .ToList();
+
+            return result;
         }
 
-        public async Task<List<RecipeModel>> GetRecipesByNameAsync(string name)
+        public async Task<List<GetRecipeResponse>> GetRecipesByNameAsync(string name)
         {
-            return await _context.Recipe
+            // Get ALL Recipes that contain this string
+            var recipes = await _context.Recipe
                 .Where(r => r.Name.Contains(name))
                 .ToListAsync();
+
+            // Get All Tags - Only the RecipeId and Name
+            var recipeTags = await _context.RecipeTags
+                .Join(
+                    _context.Tags,
+                    rt => rt.TagId,
+                    t => t.TagId,
+                    (rt, t) => new
+                    {
+                        rt.RecipeId,
+                        TagName = t.Name
+                    }
+                )
+                .ToListAsync();
+
+            // Get All Ingredients
+            var ingredients = await _context.RecipeIngredients
+                .Join(
+                    _context.Ingredients,
+                    ri => ri.IngredientId,
+                    i => i.IngredientId,
+                    (ri, i) => new
+                    {
+                        ri.RecipeId,
+                        i.IngredientId,
+                        IngredientName = i.Name,
+                        ri.UnitId,
+                        IngredientQuantity = ri.Quantity
+                    }
+                )
+                .Join(
+                    _context.Units,
+                    ri => ri.UnitId,
+                    u => u.UnitId,
+                    (ri, u) => new
+                    {
+                        ri.RecipeId,
+                        ri.IngredientId,
+                        ri.IngredientName,
+                        ri.IngredientQuantity,
+                        IngredientUnitName = u.Name,
+                        IngredientUnitAbbreviation = u.Abbreviation
+                    }
+                )
+                .ToListAsync();
+
+            // Get a list of recipes with tags and ingredients
+            var result = recipes
+                .Select(r => new GetRecipeResponse
+                {
+                    RecipeId = r.RecipeId,
+                    Image = r.RecipeImage,
+                    Name = r.Name,
+                    Instructions = r.Instructions,
+                    Tags = recipeTags
+                        .Where(rt => rt.RecipeId.Equals(r.RecipeId))
+                        .Select(rt => rt.TagName)
+                        .ToArray(),
+                    Ingredients = ingredients
+                        .Where(i => i.RecipeId.Equals(r.RecipeId))
+                        .Select(i => new GetRecipeIngredientResponse
+                        {
+                            IngredientId = i.IngredientId,
+                            IngredientName = i.IngredientName,
+                            IngredientQuantity = i.IngredientQuantity,
+                            IngredientUnitAbbreviation = i.IngredientUnitAbbreviation,
+                            IngredientUnitName = i.IngredientUnitName
+                        })
+                        .ToArray()
+                })
+                .ToList();
+
+            return result;
         }
 
         // Returns recipes that have this id
-        public async Task<RecipeModel> GetRecipeByIdAsync(string id)
+        public async Task<GetRecipeResponse> GetRecipeByIdAsync(string id)
         {
-            if(id is null)
+            // Get Recipe with that id
+            var existingRecipe = await _context.Recipe
+                .FirstOrDefaultAsync(r => r.RecipeId.Equals(id));
+
+            // If we didnt find a recipe
+            if(existingRecipe is null)
             {
-                return new RecipeModel();
+                return new GetRecipeResponse();
             }
 
-            // Id has a value
-            var existingRecipe = await _context.Recipe.FirstOrDefaultAsync(r => r.RecipeId.Equals(id));
+            // Get Ingredients
+            var ingredients = await _context.RecipeIngredients
+                .Join(
+                    _context.Ingredients,
+                    ri => ri.IngredientId,
+                    i => i.IngredientId,
+                    (ri, i) => new
+                    {
+                        ri.RecipeId,
+                        Id = i.IngredientId,
+                        Name = i.IngredientId,
+                        ri.Quantity,
+                        ri.UnitId
+                    }
+                )
+                .Join(
+                    _context.Units,
+                    ri => ri.UnitId,
+                    u => u.UnitId,
+                    (ri, u) => new
+                    {
+                        ri.RecipeId,
+                        ri.Id,
+                        ri.Name,
+                        ri.Quantity,
+                        ri.UnitId,
+                        IngredientUnitName = u.Name,
+                        IngredientUnitAbbreviation = u.Abbreviation
+                    }
+                )
+                .ToListAsync();
 
-            // If we found a recipe
-            if(existingRecipe != null)
+            var recipeTags = await _context.RecipeTags
+                .Join(
+                    _context.Tags,
+                    rt => rt.TagId,
+                    t => t.TagId,
+                    (rt, t) => new
+                    {
+                        rt.RecipeId,
+                        TagName = t.Name
+                    }
+                )
+                .ToListAsync();
+
+            var result = new GetRecipeResponse
             {
-                return existingRecipe;
-            }
+                RecipeId = existingRecipe.RecipeId,
+                Image = existingRecipe.RecipeImage,
+                Name = existingRecipe.Name,
+                Instructions = existingRecipe.Instructions,
+                Tags = recipeTags
+                    .Where(rt => rt.RecipeId.Equals(existingRecipe.RecipeId))
+                    .Select(rt => rt.TagName)
+                    .ToArray(),
+                Ingredients = ingredients
+                    .Where(i => i.RecipeId.Equals(existingRecipe.RecipeId))
+                    .Select(i => new GetRecipeIngredientResponse
+                    {
+                        IngredientId = i.Id,
+                        IngredientName = i.Name,
+                        IngredientQuantity = i.Quantity,
+                        IngredientUnitName = i.IngredientUnitName,
+                        IngredientUnitAbbreviation = i.IngredientUnitAbbreviation
+                    })
+                    .ToArray()
+            };
 
-            // No recipe found
-            return new RecipeModel();
+            return result;
+            
         }
 
         // Returns ALL ingredients
-        public async Task<List<Ingredients>> GetAllIngredientsAsync()
+        public async Task<List<GetIngredientResponse>> GetAllIngredientsAsync()
         {
-            return await _context.Ingredients.OrderBy(i => i.Name).ToListAsync();
+            return await _context.Ingredients
+                .Join(
+                    _context.Tags,
+                    i => i.TagId,
+                    t => t.TagId,
+                    (i, t) => new GetIngredientResponse
+                    {
+                        Id = i.IngredientId,
+                        Name = i.Name,
+                        TagName = t.Name
+                    }
+                )
+                .ToListAsync();
         }
 
         // Returns a list of ingredients by recipe
-        public async Task<List<Ingredients>> GetIngredientsByRecipeAsync(string recipeId)
+        public async Task<List<GetIngredientResponse>> GetIngredientsByRecipeAsync(string recipeId)
         {
-            var ingredientIds = await _context.RecipeIngredients
+            return await _context.RecipeIngredients
                 .Where(ri => ri.RecipeId.Equals(recipeId))
-                .Select(ri => ri.IngredientId)
+                .Join(
+                    _context.Ingredients,
+                    ri => ri.IngredientId,
+                    i => i.IngredientId,
+                    (ri, i) => new
+                    {
+                        i.IngredientId,
+                        i.Name,
+                        i.TagId,
+                        ri.RecipeId
+                    }
+                )
+                .Join(
+                    _context.Tags,
+                    ri => ri.TagId,
+                    t => t.TagId,
+                    (ri, t) => new GetIngredientResponse
+                    {
+                        Id = ri.IngredientId,
+                        Name = ri.Name,
+                        TagName = t.Name
+                    }
+                )
                 .ToListAsync();
-
-            var ingredients = await _context.Ingredients
-                .Where(i => ingredientIds.Contains(i.IngredientId))
-                .ToListAsync();
-
-            return ingredients;
         }
 
         // returns a list of ingredients by name
-        public async Task<List<Ingredients>> GetIngredientByNameAsync(string ingredientName)
+        public async Task<List<GetIngredientResponse>> GetIngredientByNameAsync(string ingredientName)
         {
             return await _context.Ingredients
+                .Join(
+                    _context.Tags,
+                    i => i.TagId,
+                    t => t.TagId,
+                    (i, t) => new GetIngredientResponse
+                    {
+                        Id = i.IngredientId,
+                        Name = i.Name,
+                        TagName = t.Name
+                    }
+                )
                 .Where(i => i.Name.Contains(ingredientName))
                 .ToListAsync();
         }
 
         // returns an ingredient by id
-        public async Task<Ingredients> GetIngredientByIdAsync(string ingredientId)
+        public async Task<GetIngredientResponse> GetIngredientByIdAsync(string ingredientId)
         {
             return await _context.Ingredients
-                .FirstOrDefaultAsync(i => i.IngredientId.Equals(ingredientId)) ?? new Ingredients();
+                .Where(i => i.IngredientId.Equals(ingredientId))
+                .Join(
+                    _context.Tags,
+                    i => i.TagId,
+                    t => t.TagId,
+                    (i, t) => new GetIngredientResponse
+                    {
+                        Id = i.IngredientId,
+                        Name = i.Name,
+                        TagName = t.Name
+                    }
+                )
+                .FirstOrDefaultAsync() ?? new GetIngredientResponse();
         }
 
         // Returns a list of all tags
@@ -144,6 +403,20 @@ namespace Recipe_App.Server.Services
                 .FirstOrDefaultAsync(t => t.TagId.Equals(id)) ?? new Tags();
         }
 
+        // Returns a list of all units
+        public async Task<List<Units>> GetUnitsAsync()
+        {
+            return await _context.Units
+                .OrderBy(u => u.Name)
+                .ToListAsync();
+        }
+
+        public async Task<Units> GetUnitsByIdAsync(string id)
+        {
+            return await _context.Units
+                .FirstOrDefaultAsync(u => u.UnitId.Equals(id)) ?? new Units();
+        }
+
 
         // POST METHODS
 
@@ -187,7 +460,7 @@ namespace Recipe_App.Server.Services
             return recipes;
         }
 
-        // Create NEW Recipe
+        // Create NEW Tag
         public async Task<bool> CreateTagAsync(CreateTagRequest request)
         {
             // ensure request type is valid
@@ -210,7 +483,7 @@ namespace Recipe_App.Server.Services
             };
 
             // Add Tag to the context
-            _context.Tags.Add(newTag);
+            await _context.AddAsync(newTag);
             await _context.SaveChangesAsync();
 
             // Success!
@@ -232,8 +505,8 @@ namespace Recipe_App.Server.Services
                 TagId = request.TagId
             };
 
-            // Add Ingredient to the context
-            _context.Ingredients.Add(newIngredient);
+            // save Ingredient to the context
+            await _context.AddAsync(newIngredient);
             await _context.SaveChangesAsync();
 
             // Success!
@@ -246,53 +519,88 @@ namespace Recipe_App.Server.Services
             // VALIDATIONS - START
             // Ensure recipe doesnt already exist
             var existingRecipe = await _context.Recipe.AnyAsync(Recipe => Recipe.Name.Equals(request.Name.ToLower()));
-            if (existingRecipe)
-                return false;
-
-            // Ensure recipe has tags and they all exist in the db
-            if (!request.Tags.Any())
-                return false;
 
             var ifTagExists = await _context.Tags
                 .Where(tag => request.Tags.Contains(tag.TagId))
                 .CountAsync();
-
-            if (ifTagExists != (request.Tags).Length)
-                return false;
-
-            // Ensure recipe has ingredients and they all exist in the db
-            if (!request.Ingredients.Any())
-                return false;
 
             var ingredientIds = request.Ingredients.Select(i => i.IngredientId).ToList();
             var ifIngredientExists = await _context.Ingredients
                 .Where(ingredient => ingredientIds.Contains(ingredient.IngredientId))
                 .CountAsync();
 
-            if (ifIngredientExists != (ingredientIds).Count)
-                return false;
-
-            // Check that any ingredient quantity is not smaller than 0
-            if (request.Ingredients.Any(i => i.Quantity < 0))
+            if ((ifIngredientExists != (ingredientIds).Count) 
+                || (request.Ingredients.Any(i => i.Quantity <= 0))
+                || (!request.Ingredients.Any())
+                || (ifTagExists != (request.Tags).Length)
+                || (!request.Tags.Any())
+                || (request.Ingredients.Any(i => string.IsNullOrEmpty(i.UnitId)))
+                || (existingRecipe))
                 return false;
             // VALIDATION - END
 
 
 
-            // Resize image - ImageSharp
 
-            // Convert to byte[]
-            // Use MemoryStream and IFormFile.CopyToAsync async method from Microsoft
 
-            // Create new recipe
-            var newRecipe = new RecipeModel
+            // Create variables for a new row in the recipe table
+            var imageByte = Array.Empty<byte>();
+            var newRecipe = new RecipeModel{};
+
+            // Check if image and image type arent null
+            if (request.Image != null)
             {
-                Name = request.Name.ToLower(),
-                Instructions = request.Instructions
-            };
+                // Method call to convert the image IFormFile to a byte[]
+                imageByte = await ConvertToByteArray(request.Image);
+
+                using (Image image = Image.Load(imageByte))
+                {
+                    // Aspect Ratio 
+                    double aspectRatio = 16.0 / 9.0;
+                    int newWidth = image.Width;
+                    int newHeight = (int)(image.Width / aspectRatio);
+
+                    // Make sure we arent going to increase the size
+                    if (newHeight > image.Height)
+                    {
+                        newHeight = image.Height;
+                        newWidth = (int)(image.Height * aspectRatio);
+                    }
+
+                    // Mutate the image to the aspect ratio
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(newWidth, newHeight),
+                        Mode = ResizeMode.Crop,
+                        Position = AnchorPositionMode.Center
+                    }));
+
+                    using var outputStream = new MemoryStream();
+                    image.Save(outputStream, image.Metadata.DecodedImageFormat!);
+                    imageByte = outputStream.ToArray();
+                }
+
+                // Create new recipe - WITH IMAGE 
+                newRecipe = new RecipeModel
+                {
+                    Name = request.Name.ToLower(),
+                    Instructions = request.Instructions,
+                    RecipeImage = imageByte
+                };
+
+            } else {
+                // Image and type were null
+                // Create new recipe - WITHOUT IMAGE
+                newRecipe = new RecipeModel
+                {
+                    Name = request.Name.ToLower(),
+                    Instructions = request.Instructions,
+                };
+            }
 
             // Add Recipe the context
-            _context.Recipe.Add(newRecipe);
+            await _context.Recipe.AddAsync(newRecipe);
+            await _context.SaveChangesAsync();
 
             // Go through every tag in the req and create a new recipe tag row for it
             var recipeTags = request.Tags.Select(tagId => new RecipeTags
@@ -310,13 +618,38 @@ namespace Recipe_App.Server.Services
                 RecipeId = newRecipe.RecipeId,
                 IngredientId = i.IngredientId,
                 Quantity = i.Quantity,
-                Unit = i.Unit
+                UnitId = i.UnitId
             });
 
             // Add the RecipeIngredients to the db
             await _context.RecipeIngredients.AddRangeAsync(recipeIngredients);
 
             // Everything was completed, Save the changes to the db
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
+        }
+
+        // Create NEW Unit
+        public async Task<bool> CreateUnitAsync(CreateUnitRequest request)
+        {
+            // Find if there is already a unit with that name in the db
+            var existingUnit = await _context.Units
+                .FirstOrDefaultAsync(u => u.Name.Equals(request.Name.ToLower()));
+
+            // there is a unit of the same name
+            if (existingUnit != null)
+                return false;
+
+            var newUnit = new Units
+            {
+                Name = request.Name.ToLower(),
+                Abbreviation = request.Abbreviation.ToLower()
+            };
+
+            // Save to the context
+            await _context.AddAsync(newUnit);
             await _context.SaveChangesAsync();
 
             // Success!
@@ -334,7 +667,7 @@ namespace Recipe_App.Server.Services
             if (existingRecipe is null)
                 return false;
 
-            // Update the Recipe
+            // Update the Recipe Info - We arent allowing Image updates!
             existingRecipe.Name = request.Name.ToLower();
             existingRecipe.Instructions = request.Instructions;
 
@@ -444,6 +777,31 @@ namespace Recipe_App.Server.Services
             return true;
         }
 
+        // UPDATE a Unit
+        public async Task<bool> UpdateUnitAsync(UpdateUnitRequest request)
+        {
+            // Grab the exising unit
+            var existingUnit = await _context.Units
+                .FirstOrDefaultAsync(u => u.UnitId.Equals(request.ID));
+
+            // Check if there is no unit by that id
+            if (existingUnit is null)
+                return false;
+
+            // Unit exists - Change values
+            existingUnit.Name = request.Name.ToLower();
+
+            // Save changes
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
+        }
+
+
+        // DELETE METHODS
+
+
         // DELETE A recipe by Id
         public async Task<bool> DeleteRecipeAsync(string recipeId)
         {
@@ -470,6 +828,7 @@ namespace Recipe_App.Server.Services
             return true;
         }
 
+        // DELETE A tag by Id
         public async Task<bool> DeleteTagAsync(string tagId)
         {
             // Get the tag
@@ -487,6 +846,7 @@ namespace Recipe_App.Server.Services
             return true;
         }
 
+        // DELETE A Ingredient by Id
         public async Task<bool> DeleteIngredientAsync(string ingredientId)
         {
             // Get the tag
@@ -502,6 +862,34 @@ namespace Recipe_App.Server.Services
 
             // Success
             return true;
+        }
+
+        // Delete Unit by id
+        public async Task<bool> DeleteUnitAsync(string unitid)
+        {
+            // Get the unit
+            var existingUnit = await _context.Units
+                .FirstOrDefaultAsync(u => u.UnitId.Equals(unitid));
+
+            // If the existing unit doesnt exist
+            if (existingUnit is null)
+                return false;
+
+            // Delete the unit
+            _context.Remove(existingUnit);
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
+        }
+
+
+        // Methd to convert a image to a byte array
+        public async Task<byte[]> ConvertToByteArray(IFormFile file)
+        {
+            using var memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+            return memoryStream.ToArray();
         }
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Recipe_App.Server.Data;
 using Recipe_App.Server.Services;
 using Scalar.AspNetCore;
+using SixLabors.ImageSharp.Web.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,8 @@ builder.Services.AddDbContext<RecipeDatabaseContext>(
     );
 
 builder.Services.AddScoped<IRecipeService, RecipeService>();
+
+builder.Services.AddImageSharp();
 
 var app = builder.Build();
 
@@ -40,3 +43,6 @@ app.MapControllers();
 app.MapFallbackToFile("/index.html");
 
 app.Run();
+
+app.UseImageSharp();
+app.UseStaticFiles();

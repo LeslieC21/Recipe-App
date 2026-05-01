@@ -9,19 +9,19 @@ namespace Recipe_App.Server.Services
         // GET METHODS 
 
         // Returns ALL Recipes
-        Task<List<RecipeModel>> GetRecipesAsync();
+        Task<List<GetRecipeResponse>> GetRecipesAsync();
         // Returns list of recipes that have this string in its name
-        Task<List<RecipeModel>> GetRecipesByNameAsync(string name);
+        Task<List<GetRecipeResponse>> GetRecipesByNameAsync(string name);
         // Returns recipes that have this id
-        Task<RecipeModel> GetRecipeByIdAsync(string id);
+        Task<GetRecipeResponse> GetRecipeByIdAsync(string id);
         // Returns list of ALL Ingredients
-        Task<List<Ingredients>> GetAllIngredientsAsync();
+        Task<List<GetIngredientResponse>> GetAllIngredientsAsync();
         // Returns list of ingredients by recipeid
-        Task<List<Ingredients>> GetIngredientsByRecipeAsync(string recipeId);
+        Task<List<GetIngredientResponse>> GetIngredientsByRecipeAsync(string recipeId);
         // Returns list of ingredient by name
-        Task<List<Ingredients>> GetIngredientByNameAsync(string ingredientName);
+        Task<List<GetIngredientResponse>> GetIngredientByNameAsync(string ingredientName);
         // Returns ingredient by id
-        Task<Ingredients> GetIngredientByIdAsync(string ingredientId);
+        Task<GetIngredientResponse> GetIngredientByIdAsync(string ingredientId);
         // Returns list of ALL tags
         Task<List<Tags>> GetAllTagsAsync();
         // Returns list of tags by RecipeId
@@ -32,6 +32,10 @@ namespace Recipe_App.Server.Services
         Task<List<Tags>> GetTagsByTypeAsync(int type);
         // Returns a tag by its id
         Task<Tags> GetTagByIdAsync(string id);
+        // Returns a list of all units
+        Task<List<Units>> GetUnitsAsync();
+        // Returns a single unit by id
+        Task<Units> GetUnitsByIdAsync(string id);
 
 
         // POST METHODS
@@ -46,6 +50,8 @@ namespace Recipe_App.Server.Services
         Task<bool> CreateIngredientAsync(CreateIngredientRequest request);
         // Create NEW Recipe
         Task<bool> CreateRecipeAsync(CreateRecipeRequest request);
+        // Create NEW Unit
+        Task<bool> CreateUnitAsync(CreateUnitRequest request);
 
 
         // PUT METHODS
@@ -56,6 +62,8 @@ namespace Recipe_App.Server.Services
         Task<bool> UpdateTagAsync(UpdateTagRequest request);
         // UPDATE Ingredient
         Task<bool> UpdateIngredientAsync(UpdateIngredientRequest request);
+        // UPDATE Unit
+        Task<bool> UpdateUnitAsync(UpdateUnitRequest request);
 
 
         // DELETE Methods
@@ -66,5 +74,7 @@ namespace Recipe_App.Server.Services
         Task<bool> DeleteTagAsync(string tagId);
         // Delete Ingredient
         Task<bool> DeleteIngredientAsync(string ingredientId);
+        // Delete Unit
+        Task<bool> DeleteUnitAsync(string unitid);
     }
 }

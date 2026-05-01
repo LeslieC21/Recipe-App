@@ -16,14 +16,14 @@ namespace Recipe_App.Server.Controllers
         // Returns ALL Recipes
         [HttpGet("Find/AllRecipes")]
 
-        public async Task<ActionResult<List<RecipeModel>>> GetAllRecipesAsync()
+        public async Task<ActionResult<List<GetRecipeResponse>>> GetAllRecipesAsync()
         {
             return (Ok(await service.GetRecipesAsync()));
         }
 
         // Returns Recipes with matching or exact Name
         [HttpGet("Find/RecipeName/{name}")]
-        public async Task<ActionResult<List<RecipeModel>>> GetRecipesByNameAsync(string name)
+        public async Task<ActionResult<List<GetRecipeResponse>>> GetRecipesByNameAsync(string name)
         {
             return (Ok(await service.GetRecipesByNameAsync(name)));
         }
@@ -32,35 +32,35 @@ namespace Recipe_App.Server.Controllers
 
         // Returns ONE Recipe with the matching ID
         [HttpGet("Find/RecipeId/{id}")]
-        public async Task<ActionResult<RecipeModel>> GetRecipeByIdAsync(string id)
+        public async Task<ActionResult<GetRecipeResponse>> GetRecipeByIdAsync(string id)
         {
             return (Ok(await service.GetRecipeByIdAsync(id)));
         }
 
         // Returns LIST of ALL ingredients
         [HttpGet("Find/AllIngredients")]
-        public async Task<ActionResult<List<Ingredients>>> GetAllIngredientsAsync()
+        public async Task<ActionResult<List<GetIngredientResponse>>> GetAllIngredientsAsync()
         {
             return (Ok(await service.GetAllIngredientsAsync()));
         }
 
         // Returns ingredient by RecipeId
         [HttpGet("Find/IngredientRecipe/{recipeId}")]
-        public async Task<ActionResult<List<Ingredients>>> GetIngredientsByRecipeAsync(string recipeId)
+        public async Task<ActionResult<List<GetIngredientResponse>>> GetIngredientsByRecipeAsync(string recipeId)
         {
             return (Ok(await service.GetIngredientsByRecipeAsync(recipeId)));
         }
 
         // Returns ingredient by name
         [HttpGet("Find/IngredientName/{ingredientName}")]
-        public async Task<ActionResult<List<Ingredients>>> GetIngredientsByNameAsync(string ingredientName)
+        public async Task<ActionResult<List<GetIngredientResponse>>> GetIngredientsByNameAsync(string ingredientName)
         {
             return (Ok(await service.GetIngredientByNameAsync(ingredientName)));
         }
 
         // Returns ingredient by ID
         [HttpGet("Find/IngredientId/{ingredientId}")]
-        public async Task<ActionResult<Ingredients>> GetIngredientByIdAsync(string ingredientId)
+        public async Task<ActionResult<GetIngredientResponse>> GetIngredientByIdAsync(string ingredientId)
         {
             return (Ok(await service.GetIngredientByIdAsync(ingredientId)));
         }
@@ -99,7 +99,21 @@ namespace Recipe_App.Server.Controllers
         {
             return (Ok(await service.GetTagByIdAsync(id)));
         }
-        
+
+        // Returns a list of all units
+        [HttpGet("Find/Units")]
+        public async Task<ActionResult<List<Units>>> GetUnitsAsync()
+        {
+            return (Ok(await service.GetUnitsAsync()));
+        }
+
+        // Returns unit by ID
+        [HttpGet("Find/UnitsId/{id}")]
+        public async Task<ActionResult<List<Units>>> GetUnitsByIdAsync(string id)
+        {
+            return (Ok(await service.GetUnitsByIdAsync(id)));
+        }
+
 
 
         // POST METHODS
@@ -141,6 +155,13 @@ namespace Recipe_App.Server.Controllers
             return (Ok(await service.CreateRecipeAsync(request)));
         }
 
+        // Create a NEW Unit
+        [HttpPost("New/Unit")]
+        public async Task<ActionResult<bool>> CreateUnitAsync(CreateUnitRequest request)
+        {
+            return (Ok(await service.CreateUnitAsync(request)));
+        }
+
 
 
         // PUT METHODS
@@ -166,6 +187,13 @@ namespace Recipe_App.Server.Controllers
         public async Task<ActionResult<bool>> UpdateIngredientAsync(UpdateIngredientRequest request)
         {
             return (Ok(await service.UpdateIngredientAsync(request)));
+        }
+
+        // Update a unit
+        [HttpPut("Update/Unit")]
+        public async Task<ActionResult<bool>> UpdateUnitAsync(UpdateUnitRequest request)
+        {
+            return (Ok(await service.UpdateUnitAsync(request)));
         }
 
 
@@ -195,5 +223,13 @@ namespace Recipe_App.Server.Controllers
         {
             return (Ok(await service.DeleteIngredientAsync(ingredientId)));
         }
+
+        // Delete an Unit
+        [HttpDelete("Delete/Unit/{unitid}")]
+        public async Task<ActionResult<bool>> DeleteUnitAsync(string unitid)
+        {
+            return (Ok(await service.DeleteUnitAsync(unitid)));
+        }
     }
+
 }

@@ -1,28 +1,31 @@
 <button (click)="toggleRecipeDetails()" class="container">
-  <header>
-    <button [style.color]="isFavorite() ? 'red' : 'var(--color-text)'"
-            class="FavoriteBtn"
-            (click)="toggleFavoriteRecipe(); $event.stopPropagation()"
-            aria-label="Favorite-Recipe-Button">&#9829;</button>
-    <h2>{{ recipe.recipeName }}</h2>
+  <header [style.background-image]="imageURL()">
+    <div class="header-btns">
+      <button [style.color]="isFavorite() ? 'red' : 'var(--color-text)'"
+              class="FavoriteBtn"
+              (click)="toggleFavoriteRecipe(); $event.stopPropagation()"
+              aria-label="Favorite-Recipe-Button">
+        &#9829;
+      </button>
+      <button class="toggleFullscreen" (click)="toggleFullscreen()"></button>
+    </div>
+    <h2>{{ recipe.name }}</h2>
   </header>
   @if(showRecipeDetails()) {
   <div class="recipe-details">
     <hr />
-    <h3>{{ recipe.recipeType }}</h3>
+    @for(tag of recipe.tags; track $index) {
+    <h3>{{ tag | capitalize}}</h3>
+    }
     <h4>Ingredients: </h4>
     <ul>
-      @for(ingredient of recipe.recipeIngredients; track $index) {
-      @if(ingredient[2] === "") {
-        <li>{{ingredient[1]}} {{ingredient[0].toLowerCase()}}</li>
-      } @else {
-        <li>{{ingredient[1]}} {{ingredient[2].toLowerCase()}} of {{ingredient[0].toLowerCase()}}</li>
-      }
+      @for(ingredient of recipe.ingredients; track ingredient.ingredientId) {
+      <li>{{ ingredient.ingredientQuantity }} {{ ingredient.ingredientUnitName }} ({{ ingredient.ingredientUnitAbbreviation }}) of {{ ingredient.ingredientName }}</li>
       }
     </ul>
     <h4>Instructions: </h4>
     <ul class="steps">
-      @for(step of recipe.recipeSteps; track $index) {
+      @for(step of recipe.instructions.split("|"); track $index) {
       <li>{{step}}</li>
       }
     </ul>

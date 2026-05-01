@@ -2,9 +2,8 @@
 {
     public class GetIngredientResponse
     {
-        public string IngredientId { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        // Send back the name of the tag
-        public string Tag { get; set; } = string.Empty;
+        public string TagName { get; set; } = string.Empty;
     }
 }

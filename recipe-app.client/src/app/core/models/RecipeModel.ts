@@ -1,8 +1,10 @@
+import { RecipeIngredientResponse } from './RecipeIngredientModel'
+
 export interface RecipeModel {
   recipeId: string,
-  recipeImgUrl: string,
-  recipeName: string,
-  recipeType: string,
-  recipeSteps: string[],
-  recipeIngredients: string[][]
+  image?: Blob | string | undefined,
+  name: string,
+  tags: string[],
+  instructions: string,
+  ingredients: RecipeIngredientResponse[]
 }

@@ -14,7 +14,7 @@
           <label for="file-input" class="custom-file-upload">Choose File</label>
           <input type="file" id="file-input" accept=".jpg, .jpeg, .png, .webp, .svg" class="form_group-file" (change)="onFileSelected($event)"/>
         </div>
-        <p class="form_group-file-text" (click)="onFileRemove()"> × {{ recipeForm.recipeImageUrl().value() }}</p>
+        <p class="form_group-file-text" (click)="onFileRemove()"> × {{ (recipeForm.recipeImage().value())?.name ?? 'No File Selected...' }}</p>
       </div>
 
       <div class="form_group">
@@ -36,11 +36,10 @@
         @for(step of recipeForm.recipeTags; track $index) {
         <label class="typeCounter">Tag {{$index + 1}}</label>
         <select (change)="updateTags($index, $event)">
-          <!--Show All Tags-->
-          <option value="Breakfast" selected>Breakfast</option>
-          <option value="Lunch">Lunch</option>
-          <option value="Dinner">Dinner</option>
-          <option value="Desert">Desert</option>
+          <option value="" disabled selected hidden>Select A Tag...</option>
+          @for(tag of tags(); track tag.tagId) {
+          <option value="{{ tag.tagId }}">{{ tag.name | capitalize }}</option>
+          }
         </select>
         }
       </div>
@@ -55,18 +54,17 @@
         <label class="typeCounter">Ingredient {{$index + 1}}</label>
         <div class="form_ingredient">
           <select (change)="updateIngredientID($index, $event)">
-            <!--Show All Ingredients-->
-            <option value="Milk">Milk</option>
-            <option value="Eggs">Eggs</option>
-            <option value="Cereal">Cereal</option>
-            <option value="Bacon">Bacon</option>
+            <option value="" disabled selected hidden>Select An Ingredient...</option>
+            @for(ingredient of ingredients(); track $index) {
+            <option value="{{ ingredient.ingredientId }}"> {{ ingredient.name | capitalize }}</option>
+            }
           </select>
           <input (change)="updateIngredientQuantity($index, $event)" type="number" placeholder="Measurement" />
           <select (change)="updateIngredientUnit($index, $event)">
-            <option value="Cups">Cups</option>
-            <option value="TBSP">TBSP</option>
-            <option value="TSP">TSP</option>
-            <option value="Gallon">Gallon</option>
+            <option value="" disabled selected hidden>Select A Unit...</option>
+            @for(unit of this.units(); track unit.unitId) {
+            <option value="{{ unit.unitId }}">{{ unit.name | capitalize }} ({{ unit.abbreviation }})</option>
+            }
           </select>
         </div>
         }

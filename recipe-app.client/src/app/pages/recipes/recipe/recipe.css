@@ -38,21 +38,25 @@ h2 {
 }
 
 header {
-  background-image: url(/ExampleRecipe.jpg);
+  background-image: url(/RecipeAppLogo.gif);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-
   aspect-ratio: 3/2;
-  height: 100%;
   width: 100%;
-  object-fit: cover;
-
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
+  justify-content: space-between;
 }
 
-.FavoriteBtn {
+.header-btns {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.FavoriteBtn, .toggleFullscreen {
   margin: 0.5rem;
   border: none;
   background-color: #c2c2c2e2;
@@ -60,17 +64,28 @@ header {
   box-shadow: 0 0 3px 3px #c2c2c2e2;
   color: var(--color-text);
   font-size: clamp(1rem, 1.5vw, 2rem);
-
   width: 10%;
   height: auto;
 }
 
-.FavoriteBtn:hover {
-  background-color: #e1e1e1e2;
-  animation: FavoriteHeartFill 2s infinite;
-  animation-timing-function: ease-in;
-  animation-direction: alternate;
+.toggleFullscreen {
+  margin-left: auto;
+  background-image: url('/fullscreen-icon.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
+
+  .toggleFullscreen:hover {
+    background-color: #e1e1e1e2;
+  }
+
+  .FavoriteBtn:hover {
+    background-color: #e1e1e1e2;
+    animation: FavoriteHeartFill 1s;
+    animation-timing-function: ease-in;
+    animation-fill-mode: forwards;
+  }
 
 @keyframes FavoriteHeartFill {
   from {

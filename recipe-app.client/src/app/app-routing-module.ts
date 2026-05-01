@@ -24,5 +24,10 @@ export const routes: Routes = [
     path: 'Create-Recipe',
     component: CreateRecipe,
     data: { showNavbar: true }
+  },
+  {
+    path: '**',
+    component: Home,
+    data: { showNavbar: false }
   }
 ]
