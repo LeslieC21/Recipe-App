@@ -30,14 +30,14 @@
       <div class="form_group">
         <div class="form_group-title">
           <label for="tagCounter">How many tags does this recipe have?</label>
-          <button>Add A New Tag</button>
+          <button (click)="addTag($event)">Add A New Tag</button>
         </div>
         <input type="number" id="tagCounter" (change)="addTags()" [formField]="recipeForm.recipeTotalTags" oninput="if (this.value < 0) this.value = 0;" />
         @for(step of recipeForm.recipeTags; track $index) {
         <label class="typeCounter">Tag {{$index + 1}}</label>
         <select (change)="updateTags($index, $event)">
           <option value="" disabled selected hidden>Select A Tag...</option>
-          @for(tag of tags(); track tag.tagId) {
+          @for(tag of recipeTags(); track tag.tagId) {
           <option value="{{ tag.tagId }}">{{ tag.name | capitalize }}</option>
           }
         </select>
@@ -47,7 +47,7 @@
       <div class="form_group">
         <div class="form_group-title">
           <label for="ingredientCounter">How Many Ingredients in this recipe?</label>
-          <button>Add New Ingredient</button>
+          <button (click)="addIngredient($event)">Add New Ingredient</button>
         </div>
         <input type="number" id="ingredientCounter" (change)="addIngredients()" [formField]="recipeForm.recipeTotalIngredients" oninput="if (this.value < 0) this.value = 0;" />
         @for(step of recipeForm.recipeIngredients; track $index) {
@@ -56,12 +56,13 @@
           <select (change)="updateIngredientID($index, $event)">
             <option value="" disabled selected hidden>Select An Ingredient...</option>
             @for(ingredient of ingredients(); track $index) {
-            <option value="{{ ingredient.ingredientId }}"> {{ ingredient.name | capitalize }}</option>
+            <option value="{{ ingredient.id }}"> {{ ingredient.name | capitalize }}</option>
             }
           </select>
           <input (change)="updateIngredientQuantity($index, $event)" type="number" placeholder="Measurement" />
           <select (change)="updateIngredientUnit($index, $event)">
             <option value="" disabled selected hidden>Select A Unit...</option>
+            <option value="">No Unit</option>
             @for(unit of this.units(); track unit.unitId) {
             <option value="{{ unit.unitId }}">{{ unit.name | capitalize }} ({{ unit.abbreviation }})</option>
             }
@@ -73,3 +74,45 @@
     </form>
   </main>
 </div>
+
+
+<!-- Modal -->
+@if(showModal()) {
+<div class="modal-container">
+  <div class="modal-inner">
+    <div class="modal-title">
+      <h1>{{ modalTitle() }}</h1>
+      <button (click)="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>{{ modalBody() }}</p>
+      @if(modalVersion() == MODALTYPE_CREATETAG)
+      {
+      <label for="tag">Enter New Tags Name: </label>
+      <input id="tag" placeholder="e.g Breakfast / Spicy" [formField]="tagForm.tagName" />
+
+      <div class="checkbox">
+        <label>Is this tag a Recipe Tag?</label>
+        <input type="checkbox" [formField]="tagForm.isRecipeTag" />
+      </div>
+      } @else if (modalVersion() == MODALTYPE_CREATEINGREDIENT){
+      <label for="ingredient">Enter New Ingredient Name: </label>
+      <input id="ingredient" placeholder="e.g Milk / Bread" [formField]="ingredientForm.Name" />
+
+      <select [formField]="ingredientForm.TagId">
+        <option value="" disabled selected hidden>Select A Tag...</option>
+        @for(tag of ingredientTags(); track $index) {
+        <option value="{{tag.tagId}}">{{tag.name | capitalize}}</option>
+        }
+      </select>
+      }
+    </div>
+    <div class="modal-buttons">
+      @if(modalVersion() != MODALTYPE_RESPONSE) {
+      <button (click)="saveModal()">Save</button>
+      }
+      <button (click)="closeModal()">Exit</button>
+    </div>
+  </div>
+</div>
+}

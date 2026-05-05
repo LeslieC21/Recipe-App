@@ -42,9 +42,11 @@ namespace Recipe_App.Server.Services
 
         // Create NEW Tag
         // Returns list of recipes that have this tagid in its tag
-        Task<List<RecipeModel>> GetRecipesByTagsAsync(string[] tags);
+        Task<List<GetRecipeResponse>> GetRecipesByTagsAsync(string[] tags);
         // Returns list of recipes that have this ingredientid in its ingredients
-        Task<List<RecipeModel>> GetRecipesByIngredientsAsync(string[] ingredients);
+        Task<List<GetRecipeResponse>> GetRecipesByIngredientsAsync(string[] ingredients);
+        // Returns a list of recipes that have these tags or ingredients in it
+        Task<List<GetRecipeResponse>> GetRecipeByFilters(GetRecipeByFiltersRequest getReq);
         Task<bool> CreateTagAsync(CreateTagRequest request);
         // Create NEW Ingredient
         Task<bool> CreateIngredientAsync(CreateIngredientRequest request);

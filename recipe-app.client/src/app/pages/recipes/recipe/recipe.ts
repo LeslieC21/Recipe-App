@@ -1,5 +1,4 @@
 import { Component, Input, signal, inject, EventEmitter, Output } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { RecipeModel } from '../../../core/models/RecipeModel';
@@ -7,7 +6,7 @@ import { CapitalizePipe } from '../../../core/services/CapitalizePipe';
 
 @Component({
   selector: 'app-recipe',
-  imports: [CapitalizePipe, NgOptimizedImage],
+  imports: [CapitalizePipe],
   templateUrl: './recipe.html',
   styleUrl: './recipe.css',
 })
@@ -23,7 +22,8 @@ export class Recipe {
   isFavorite = signal<Boolean>(false);
 
   toggleRecipeDetails() {
-    this.showRecipeDetails.update(v => !v);
+    if(this.viewAlone != true)
+      this.showRecipeDetails.update(v => !v);
   }
 
   toggleFavoriteRecipe() {

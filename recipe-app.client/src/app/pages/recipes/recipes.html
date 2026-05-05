@@ -1,21 +1,54 @@
 <div class="container">
   <header>
     <h1>Delicious Recipes</h1>
+    @if(!viewSingleRecipe()) {
+    <form class="search-form">
+      <button (click)="toggleSearchCriteria($event)" class="filter-button">
+        <img src="white-filter.png" alt="filter-button"/>
+      </button>
+      <div>
+        <input class="search-input" placeholder="Search..." [formField]="searchForm.recipeName"/>
+        <button class="search-button" (click)="doNameSearch($event)"></button>
+      </div>
+    </form>
+    @if(showSearchCriteria()) {
+      <div class="search-criteria">
+        <div class="search-criteria-inner">
+          <label>Tags :</label>
+          <div class="search-items">
+            @for(tag of tags(); track $index) {
+            <div class="search-item">
+              <label for="checkbox{{tag.name}}">{{tag.name}}</label>
+              <input type="checkbox" id="{{tag.tagId}}" name="checkbox" (change)="toggleSearchItemTag($event, tag.tagId)"/>
+            </div>
+            }
+          </div>
+        </div>
+        <div class="search-criteria-inner">
+          <label>Ingredients :</label>
+          <div class="search-items">
+            @for(ingredient of ingredients(); track $index) {
+            <div class="search-item">
+              <label for="checkbox">{{ingredient.name}}</label>
+              <input type="checkbox" id="{{ingredient.id}}" name="checkbox" (change)="toggleSearchItemIngredient($event, ingredient.id)" />
+            </div>
+            }
+          </div>
+        </div>
+        <div class="search-criteria-buttons">
+          <button (click)="toggleSearchCriteria($event)">Close Filters</button>
+          <button (click)="clearFilters($event)">Clear Filters</button>
+        </div>
+      </div>
+    }
+    }
   </header>
+  @if(isLoading()) {
+    <h1 class="loading-text">Loading Recipes
+      <span>...</span></h1>
+  } @else {
   @if(viewSingleRecipe() == null) {
   <div class="recipes-container">
-    <div class="recipe">
-      <app-recipe [recipe]="exampleData1" [viewAlone]="false"></app-recipe>
-    </div>
-    <div class="recipe">
-      <app-recipe [recipe]="exampleData1" [viewAlone]="false"></app-recipe>
-    </div>
-    <div class="recipe">
-      <app-recipe [recipe]="exampleData1" [viewAlone]="false"></app-recipe>
-    </div>
-    <div class="recipe">
-      <app-recipe [recipe]="exampleData1" [viewAlone]="false"></app-recipe>
-    </div>
     @for(recipe of recipes(); track recipe.recipeId) {
     <div class="recipe">
       <app-recipe [recipe]="recipe" [viewAlone]="false" (expandedRecipe)="toggleSingleRecipeView($event)"></app-recipe>
@@ -25,10 +58,11 @@
   } @else {
   @for(recipe of recipes(); track recipe.recipeId) {
   @if(recipe.recipeId === viewSingleRecipe()) {
-  <div class="recipe">
+  <div class="recipe-single">
     <app-recipe [recipe]="recipe" [viewAlone]="true" (expandedRecipe)="toggleSingleRecipeView($event)"></app-recipe>
   </div>
   }
     }
     }
+  }
   </div>

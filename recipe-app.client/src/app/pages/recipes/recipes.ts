@@ -1,63 +1,54 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
-import { map, switchMap }  from 'rxjs'
+import { FormsModule } from '@angular/forms';
+import { form, debounce, FormField } from '@angular/forms/signals';
+import { map }  from 'rxjs'
 
 import { Recipe } from './recipe/recipe';
 import { RecipeModel } from '../../core/models/RecipeModel';
-import { RecipeIngredientResponse } from '../../core/models/RecipeIngredientModel';
+import { TagModel } from '../../core/models/TagModel';
+import { IngredientModel } from '../../core/models/IngredientModel';
 import { RecipeService } from '../../core/services/RecipeService';
+
+interface SearchModel {
+  recipeName: string;
+  recipeTags: string[];
+  recipeIngredients: string[];
+}
 
 @Component({
   selector: 'app-recipes',
-  imports: [Recipe],
+  imports: [Recipe, FormField, FormsModule],
   templateUrl: './recipes.html',
   styleUrl: './recipes.css',
 })
+
 export class Recipes implements OnInit {
   // Injects
   RService = inject(RecipeService);
   destroyRef = inject(DestroyRef);
 
   viewSingleRecipe = signal<string | null>(null);
+  isLoading = signal<boolean>(false);
   recipes = signal<RecipeModel[]>([]);
-  exampleData1 = <RecipeModel>{
-    recipeId: "1",
-    name: "Scrambled Eggs",
-    tags: ["Breakfast"],
-    instructions: "Place a small skillet over medium heat and add 1tbsp of butter.|Crack 2 large eggs into the skillet.|Stir the eggs gently for about 1 minute, until it seems the egg gets thicker.|Remove your eggs from the skillet, place onto a plate and add salt and pepper as desired.",
-    ingredients: [
-      {
-        ingredientId: "1",
-        ingredientName: "Eggs",
-        ingredientQuantity: 2,
-        ingredientUnitName: "",
-        ingredientUnitAbbreviation: ""
-      },
-      {
-        ingredientId: "2",
-        ingredientName: "Butter",
-        ingredientQuantity: 1,
-        ingredientUnitName: "Tablespoon",
-        ingredientUnitAbbreviation: "TBSP"
-      },
-      {
-        ingredientId: "3",
-        ingredientName: "Salt",
-        ingredientQuantity: 1,
-        ingredientUnitName: "Teaspoon",
-        ingredientUnitAbbreviation: "TSP"
-      },
-      {
-        ingredientId: "4",
-        ingredientName: "Pepper",
-        ingredientQuantity: 1,
-        ingredientUnitName: "Teaspoon",
-        ingredientUnitAbbreviation: "TSP"
-      }
-    ]
-  }
+  tags = signal<TagModel[]>([]);
+  ingredients = signal<IngredientModel[]>([]);
+  showSearchCriteria = signal<boolean>(false);
+  searchTitleValue = signal<string>('');
+
+  // Search Forms
+  searchModel = signal<SearchModel>({
+    recipeName: '',
+    recipeTags: [],
+    recipeIngredients: []
+  })
+
+  searchForm = form(this.searchModel, (schemaPath) => {
+    debounce(schemaPath.recipeName, 300);
+  })
 
   // Method that holds the API request
   async getRecipes() {
+    this.isLoading.set(true);
     const subscription = this.RService.getRecipes()
       .pipe(
         map(switchMap => {
@@ -68,7 +59,6 @@ export class Recipes implements OnInit {
               const binary = atob(base64);
               const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
               recipe.image = new Blob([bytes], { type: 'image/jpeg' });
-              console.log('is Blob:', recipe.image instanceof Blob);
             }
           })
           console.log(switchMap);
@@ -77,6 +67,7 @@ export class Recipes implements OnInit {
       )
       .subscribe(x => {
         this.recipes.set(x);
+        this.isLoading.set(false);
     });
     this.destroyRef.onDestroy(() => {
       subscription.unsubscribe();
@@ -93,8 +84,152 @@ export class Recipes implements OnInit {
     this.viewSingleRecipe.set(recipeId);
   }
 
+  // Event from checkbox
+  toggleSearchItemTag(event: Event, value: string) {
+    const checked = (event.target as HTMLInputElement).checked;
+    const tags = this.searchModel().recipeTags;
+
+    if (checked) {
+      if (!tags.includes(value)) 
+        tags.push(value);
+    } else {
+      const idx = tags.indexOf(value);
+      if (idx > -1)
+        tags.splice(idx, 1);
+    }
+
+    this.doFilterSearch(undefined);
+  }
+
+  // Event from checkbox
+  toggleSearchItemIngredient(event: Event, value: string) {
+    const checked = (event.target as HTMLInputElement).checked;
+    const tags = this.searchModel().recipeIngredients;
+
+    // if we just checked a new item
+    if (checked) {
+      if (!tags.includes(value))
+        tags.push(value);
+    } else {    // We unchecked an item
+      const idx = tags.indexOf(value);
+      if (idx > -1)
+        tags.splice(idx, 1);
+    }
+
+    this.doFilterSearch(undefined);
+  }
+
+  // Method to get all recipe tags
+  async getSearchTags() {
+    const subscription = this.RService.getTagsByRecipeType().subscribe(x => {
+      this.tags.set(x);
+    });
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    });
+  }
+
+  // Method to get all ingredients
+  async getSearchIngredients() {
+    const subscription = this.RService.getIngredients().subscribe(x => {
+      this.ingredients.set(x);
+    });
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    });
+  }
+
+  toggleSearchCriteria(event: Event) {
+    event.preventDefault();
+
+    // Update to the opposite value
+    this.showSearchCriteria.update(s => !s);
+
+    // If we are now looking at the search options
+    if (this.showSearchCriteria()) {
+      // Set a timeout to allow DOM elements to be rendered
+      setTimeout(() => {
+        // Check which searches were marked before it closed
+        // Go through each tag that is checked
+        console.log(this.searchModel().recipeTags);
+        for (let tag of this.searchModel().recipeTags) {
+          const element = document.getElementById(tag) as HTMLInputElement;
+          if (element)
+            element.checked = true;
+        }
+
+        // Go through each ingredient that is checked
+        for (let ingredient of this.searchModel().recipeIngredients) {
+          const element = document.getElementById(ingredient) as HTMLInputElement;
+          if (element)
+            element.checked = true;
+        }
+      }, 0);
+    }
+  }
+
+  doNameSearch(event: Event) {
+    event.preventDefault();
+
+    console.log("Changed");
+    if (this.searchModel().recipeName == '') {
+      this.getRecipes();
+      return;
+    }
+
+    const subscription = this.RService.getRecipeByName(this.searchModel().recipeName).subscribe(x => {
+      this.recipes.set(x);
+    });
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    })
+  }
+
+  // Method to search recipes by their ingredients or tags
+  doFilterSearch(event: Event | undefined) {
+    if(event)
+      event.preventDefault();
+
+    const subscription = this.RService.getRecipesByFilter(this.searchModel().recipeTags, this.searchModel().recipeIngredients)
+      .subscribe(x => {
+        this.recipes.set(x);
+      })
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    })
+  }
+
+  clearFilters(event: Event) {
+    event.preventDefault();
+
+    // Go through each tag that is checked
+    for (let tag of this.searchModel().recipeTags) {
+      const element = document.getElementById(tag) as HTMLInputElement;
+      element.checked = false;
+    }
+
+    // Go through each ingredient that is checked
+    for (let ingredient of this.searchModel().recipeIngredients) {
+      const element = document.getElementById(ingredient) as HTMLInputElement;
+      element.checked = false;
+    }
+
+    // set both signal arrays to empty
+    this.searchModel().recipeIngredients = [];
+    this.searchModel().recipeTags = [];
+
+    const subscription = this.RService.getRecipes().subscribe(x => {
+      this.recipes.set(x);
+    });
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    })
+  }
+
   ngOnInit() {
     // Method to get all recipes from db
     this.getRecipes();
+    this.getSearchTags();
+    this.getSearchIngredients();
   }
 }

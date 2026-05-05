@@ -20,7 +20,11 @@
     <h4>Ingredients: </h4>
     <ul>
       @for(ingredient of recipe.ingredients; track ingredient.ingredientId) {
+      @if(ingredient.ingredientUnitName == null) {
+      <li>{{ ingredient.ingredientQuantity }} {{ ingredient.ingredientName }}</li>
+      } @else {
       <li>{{ ingredient.ingredientQuantity }} {{ ingredient.ingredientUnitName }} ({{ ingredient.ingredientUnitAbbreviation }}) of {{ ingredient.ingredientName }}</li>
+      }
       }
     </ul>
     <h4>Instructions: </h4>

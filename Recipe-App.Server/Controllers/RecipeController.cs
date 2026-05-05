@@ -2,6 +2,7 @@
 using Recipe_App.Server.DTOs;
 using Recipe_App.Server.Models;
 using Recipe_App.Server.Services;
+using System.Diagnostics;
 
 namespace Recipe_App.Server.Controllers
 {
@@ -122,16 +123,42 @@ namespace Recipe_App.Server.Controllers
 
         // Returns Recipes with matching tag(s)
         [HttpPost("Find/RecipeTag")]
-        public async Task<ActionResult<List<RecipeModel>>> GetRecipesByTagsAsync(string[] tags)
+        public async Task<ActionResult<List<GetRecipeResponse>>> GetRecipesByTagsAsync(string[] tags)
         {
             return (Ok(await service.GetRecipesByTagsAsync(tags)));
         }
 
         // Returns Recipes with matching Ingredient(s)
         [HttpPost("Find/RecipeIngredient")]
-        public async Task<ActionResult<List<RecipeModel>>> GetRecipesByIngredientsAsync(string[] ingredients)
+        public async Task<ActionResult<List<GetRecipeResponse>>> GetRecipesByIngredientsAsync(string[] ingredients)
         {
             return (Ok(await service.GetRecipesByIngredientsAsync(ingredients)));
+        }
+
+        [HttpPost("Find/Recipe/Filters")]
+        public async Task<ActionResult<List<GetRecipeResponse>>> GetRecipeByFilters(GetRecipeByFiltersRequest getReq)
+        {
+            bool hasIngredients = getReq.ingredients?.Length > 0;
+            bool hasTags = getReq.tags?.Length > 0;
+
+            System.Diagnostics.Debug.WriteLine($"Ingredients: {getReq.ingredients?.Length}, Tags: {getReq.tags?.Length}");
+
+            if (hasIngredients && !hasTags || hasIngredients && getReq.tags is null)
+            {
+                return (Ok(await service.GetRecipesByIngredientsAsync(getReq.ingredients)));
+            }
+            else if (hasTags && !hasIngredients || hasTags && getReq.ingredients is null)
+            {
+                return (Ok(await service.GetRecipesByTagsAsync(getReq.tags)));
+            }
+            else if (hasIngredients && hasTags)
+            {
+                return (Ok(await service.GetRecipeByFilters(getReq)));
+            }
+            else
+            {
+                return (Ok(await service.GetRecipesAsync()));
+            }
         }
 
         // Create a NEW Tag

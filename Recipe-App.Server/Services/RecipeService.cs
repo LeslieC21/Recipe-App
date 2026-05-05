@@ -42,7 +42,7 @@ namespace Recipe_App.Server.Services
                         ri.UnitId,
                     }
                 )
-                .Join(
+                .LeftJoin(
                     _context.Units,
                     i => i.UnitId,
                     u => u.UnitId,
@@ -423,41 +423,301 @@ namespace Recipe_App.Server.Services
 
 
         // Returns list of recipes that have this tagid in its tag
-        public async Task<List<RecipeModel>> GetRecipesByTagsAsync(string[] tags)
+        public async Task<List<GetRecipeResponse>> GetRecipesByTagsAsync(string[] tags)
         {
-            // Get the recipe Ids that contain both tags
-            var recipeIds = await _context.RecipeTags
+            // Get ALL recipeIds that match any tag in the get request
+            var tagRecipeIds = await _context.RecipeTags
                 .Where(rt => tags.Contains(rt.TagId))
-                .GroupBy(rt => rt.RecipeId)
-                .Where(g => g.Count() >= tags.Length)
-                .Select(g => g.Key)
+                .Select(rt => rt.RecipeId)
                 .ToListAsync();
 
-            // Get the recipes itself
+            // Get all recipes that contain a tag from the list of tag filters
             var recipes = await _context.Recipe
-                .Where(r => r.RecipeId.Contains(r.RecipeId))
+                .Where(r => tagRecipeIds.Contains(r.RecipeId))
                 .ToListAsync();
 
-            return recipes;
+            // Grab all ingredients for recipes
+            var recipeIngredients = await _context.RecipeIngredients
+                .Join(
+                    _context.Ingredients,
+                    ri => ri.IngredientId,
+                    i => i.IngredientId,
+                    (ri, i) => new
+                    {
+                        ri.RecipeId,
+                        i.IngredientId,
+                        i.Name,
+                        ri.Quantity,
+                        ri.UnitId
+                    }
+                )
+                .LeftJoin(
+                    _context.Units,
+                    ri => ri.UnitId,
+                    u => u.UnitId,
+                    (ri, u) => new
+                    {
+                        ri.RecipeId,
+                        ri.IngredientId,
+                        ri.Name,
+                        ri.Quantity,
+                        UnitName = u.Name,
+                        u.Abbreviation
+                    }
+
+                )
+                .Where(ri => tagRecipeIds.Contains(ri.RecipeId))
+                .ToListAsync();
+
+            // Fetch all tags for those recipes as well
+            var recipeTags = await _context.RecipeTags
+                .Join(
+                    _context.Tags,
+                    rt => rt.TagId,
+                    t => t.TagId,
+                    (rt, t) => new
+                    {
+                        rt.RecipeId,
+                        t.TagId,
+                        t.Name
+                    }
+
+                )
+                .Where(t => tagRecipeIds.Contains(t.RecipeId))
+                .ToListAsync();
+
+            // Build the response
+            var result = recipes
+                .Select(r => new GetRecipeResponse
+                {
+                    RecipeId = r.RecipeId,
+                    Image = r.RecipeImage,
+                    Name = r.Name,
+                    Instructions = r.Instructions,
+                    Tags = recipeTags
+                        .Where(t => t.RecipeId.Equals(r.RecipeId))
+                        .Select(t => t.Name)
+                        .ToArray(),
+                    Ingredients = recipeIngredients
+                        .Where(i => i.RecipeId.Equals(r.RecipeId))
+                        .Select(i => new GetRecipeIngredientResponse
+                        {
+                            IngredientId = i.IngredientId,
+                            IngredientName = i.Name,
+                            IngredientQuantity = i.Quantity,
+                            IngredientUnitName = i.UnitName,
+                            IngredientUnitAbbreviation = i.Abbreviation
+                        })
+                        .ToArray()
+                })
+                .ToList();
+
+            return result;
         }
 
         // Returns list of recipes that have this ingredientid in its ingredients
-        public async Task<List<RecipeModel>> GetRecipesByIngredientsAsync(string[] ingredients)
+        public async Task<List<GetRecipeResponse>> GetRecipesByIngredientsAsync(string[] ingredients)
         {
-            // Get the recipeIds that contain both ingredients
-            var recipeIds = await _context.RecipeIngredients
-                .Where(rt => ingredients.Contains(rt.IngredientId))
-                .GroupBy(rt => rt.RecipeId)
-                .Where(g => g.Count() >= ingredients.Length)
-                .Select(g => g.Key)
+            // Get all recipeIds that match any ingredient in the get request
+            var ingredientRecipeIds = await _context.RecipeIngredients
+                .Where(ri => ingredients.Contains(ri.IngredientId))
+                .Select(ri => ri.RecipeId)
                 .ToListAsync();
 
-            // Get the recipes itself
+            // Get all recipes that contain an ingredient from the list of ingredient filters
             var recipes = await _context.Recipe
-                .Where(r => r.RecipeId.Contains(r.RecipeId))
+                .Where(r => ingredientRecipeIds.Contains(r.RecipeId))
                 .ToListAsync();
 
-            return recipes;
+
+            // Grab all ingredients for surviving recipes
+            var recipeIngredients = await _context.RecipeIngredients
+                .Join(
+                    _context.Ingredients,
+                    ri => ri.IngredientId,
+                    i => i.IngredientId,
+                    (ri, i) => new
+                    {
+                        ri.RecipeId,
+                        i.IngredientId,
+                        i.Name,
+                        ri.Quantity,
+                        ri.UnitId
+                    }
+                )
+                .LeftJoin(
+                    _context.Units,
+                    ri => ri.UnitId,
+                    u => u.UnitId,
+                    (ri, u) => new
+                    {
+                        ri.RecipeId,
+                        ri.IngredientId,
+                        ri.Name,
+                        ri.Quantity,
+                        UnitName = u.Name,
+                        u.Abbreviation
+                    }
+
+                )
+                .Where(ri => ingredientRecipeIds.Contains(ri.RecipeId))
+                .ToListAsync();
+
+            // Fetch all tags for those recipes as well
+            var recipeTags = await _context.RecipeTags
+                .Join(
+                    _context.Tags,
+                    rt => rt.TagId,
+                    t => t.TagId,
+                    (rt, t) => new
+                    {
+                        rt.RecipeId,
+                        t.TagId,
+                        t.Name
+                    }
+
+                )
+                .Where(t => ingredientRecipeIds.Contains(t.RecipeId))
+                .ToListAsync();
+
+            // Build the response
+            var result = recipes
+                .Select(r => new GetRecipeResponse
+                {
+                    RecipeId = r.RecipeId,
+                    Image = r.RecipeImage,
+                    Name = r.Name,
+                    Instructions = r.Instructions,
+                    Tags = recipeTags
+                        .Where(t => t.RecipeId.Equals(r.RecipeId))
+                        .Select(t => t.Name)
+                        .ToArray(),
+                    Ingredients = recipeIngredients
+                        .Where(i => i.RecipeId.Equals(r.RecipeId))
+                        .Select(i => new GetRecipeIngredientResponse
+                        {
+                            IngredientId = i.IngredientId,
+                            IngredientName = i.Name,
+                            IngredientQuantity = i.Quantity,
+                            IngredientUnitName = i.UnitName,
+                            IngredientUnitAbbreviation = i.Abbreviation
+                        })
+                        .ToArray()
+                })
+                .ToList();
+
+            return result;
+        }
+
+        // Returns a list of recipes that have either these tags or these ingredients
+        // OR between same category ANDS between different categories
+        public async Task<List<GetRecipeResponse>> GetRecipeByFilters(GetRecipeByFiltersRequest getReq)
+        {
+            // Get all recipeIds that match any ingredient in the get request
+            // This is the OR part
+            var ingredientRecipeIds = await _context.RecipeIngredients
+                 .Where(ri => getReq.ingredients.Contains(ri.IngredientId))
+                 .Select(ri => ri.RecipeId)
+                 .ToHashSetAsync();
+
+            // Get all recipeIds that match any of the tags in the get request
+            // This is the OR part
+            var tagsRecipeIds = await _context.RecipeTags
+                .Where(t => getReq.tags.Contains(t.TagId))
+                .Select(t => t.RecipeId)
+                .ToHashSetAsync();
+
+            // Get all recipeIds
+            // At first every recipe is avaliable to be chosen
+            var matchingRecipeIds = await _context.Recipe.Select(r => r.RecipeId).ToHashSetAsync();
+
+            // Keep only the Ids that exist in both recipeIds
+            // This is the AND between categories 
+            matchingRecipeIds.IntersectWith(ingredientRecipeIds);
+            matchingRecipeIds.IntersectWith(tagsRecipeIds);
+
+            // Grab all recipes that were kept in the hashset
+            var recipes = await _context.Recipe
+                .Where(r => matchingRecipeIds.Contains(r.RecipeId))
+                .ToListAsync();
+
+            // Grab all ingredients for surviving recipes
+            var ingredients = await _context.RecipeIngredients
+                .Join(
+                    _context.Ingredients,
+                    ri => ri.IngredientId,
+                    i => i.IngredientId,
+                    (ri, i) => new
+                    {
+                        ri.RecipeId,
+                        i.IngredientId,
+                        i.Name,
+                        ri.Quantity,
+                        ri.UnitId
+                    }
+                )
+                .LeftJoin(
+                    _context.Units,
+                    ri => ri.UnitId,
+                    u => u.UnitId,
+                    (ri, u) => new
+                    {
+                        ri.RecipeId,
+                        ri.IngredientId,
+                        ri.Name,
+                        ri.Quantity,
+                        UnitName = u.Name,
+                        u.Abbreviation
+                    }
+
+                )
+                .Where(ri => matchingRecipeIds.Contains(ri.RecipeId))
+                .ToListAsync();
+
+            // Fetch all tags for those recipes as well
+            var tags = await _context.RecipeTags
+                .Join(
+                    _context.Tags,
+                    rt => rt.TagId,
+                    t => t.TagId,
+                    (rt, t) => new 
+                    {
+                        rt.RecipeId,
+                        t.TagId,
+                        t.Name
+                    }
+
+                )
+                .Where(t => matchingRecipeIds.Contains(t.RecipeId))
+                .ToListAsync();
+
+            // Build result response
+            var result = recipes
+                .Select(r => new GetRecipeResponse
+                {
+                    RecipeId = r.RecipeId,
+                    Image = r.RecipeImage,
+                    Name = r.Name,
+                    Instructions = r.Instructions,
+                    Tags = tags
+                        .Where(t => t.RecipeId.Equals(r.RecipeId))
+                        .Select(t => t.Name)
+                        .ToArray(),
+                    Ingredients = ingredients
+                        .Where(i => i.RecipeId.Equals(r.RecipeId))
+                        .Select(i => new GetRecipeIngredientResponse
+                        {
+                            IngredientId = i.IngredientId,
+                            IngredientName = i.Name,
+                            IngredientQuantity = i.Quantity,
+                            IngredientUnitName = i.UnitName,
+                            IngredientUnitAbbreviation = i.Abbreviation
+                        })
+                        .ToArray()
+                })
+                .ToList();
+
+            return result;
         }
 
         // Create NEW Tag
@@ -534,7 +794,6 @@ namespace Recipe_App.Server.Services
                 || (!request.Ingredients.Any())
                 || (ifTagExists != (request.Tags).Length)
                 || (!request.Tags.Any())
-                || (request.Ingredients.Any(i => string.IsNullOrEmpty(i.UnitId)))
                 || (existingRecipe))
                 return false;
             // VALIDATION - END

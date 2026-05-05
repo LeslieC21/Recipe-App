@@ -116,6 +116,57 @@ textarea {
   margin: .5rem;
 }
 
+.modal-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #272727a4;
+}
+
+.modal-inner {
+    position: relative;
+    width: 60%;
+    padding: 2rem;
+    background-color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.modal-title {
+  border-bottom: 1px solid #272727a4;
+  margin-bottom: 1rem;
+  display: flex;
+  font-family: var(--font-alt);
+}
+
+.modal-title button {
+    margin-left: auto;
+    height: 10%;
+    width: auto;
+}
+
+.modal-body {
+    font-family: var(--font-unkempt);
+    font-size: 1.2rem;
+     margin-bottom: 1rem;
+     display: flex;
+     flex-direction: column;
+}
+
+.modal-body p {
+  margin-bottom: 3rem;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: 2rem;
+}
+
 @media (min-width: 768px) {
   .form_group-title {
     flex-direction: row;
