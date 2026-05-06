@@ -1,5 +1,6 @@
 :root {
   --color-bg: #c4846c;
+  --color-alt-bg: #b2ac88;
   --color-bg-transparent: #c4846c3e;
   --color-text: #ffffffef;
   --color-alt-text: #B2AC88;
@@ -10,6 +11,7 @@
   --header-background: #B2AC88;
   --shadow-sm: 1px 1px 5px rgba(0, 0, 0);
   --shadow-md: 2px 2px 5px rgba(0, 0, 0);
+  --shadow-lg: 5px 5px 5px rgba(0, 0, 0);
 }
 
 html {

@@ -11,5 +11,8 @@ namespace Recipe_App.Server.Data
         public virtual DbSet<RecipeTags> RecipeTags { get; set; }
         public virtual DbSet<Tags> Tags { get; set; }
         public virtual DbSet<Units> Units { get; set; }
+        public virtual DbSet<Users> Users { get; set; }
+        public virtual DbSet<UserFavoriteRecipes> UserFavoriteRecipes { get; set; }
+        public virtual DbSet<RefreshTokens> RefreshTokens { get; set; }
     }
 }

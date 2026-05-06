@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Recipe_App.Server.Models
 {
+    // This is a composite key (multiple columns)
     [PrimaryKey(nameof(RecipeId), nameof(IngredientId))]
     public class RecipeIngredients
     {
@@ -22,6 +23,6 @@ namespace Recipe_App.Server.Models
         // FK
         public string? UnitId { get; set; } = string.Empty;
         [ForeignKey("UnitId")]
-        public Units Unit { get; set; } = null!;
+        public Units? Unit { get; set; } = null!;
     }
 }

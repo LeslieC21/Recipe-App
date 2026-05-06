@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Recipe_App.Server.Data;
-using Recipe_App.Server.DTOs;
+using Recipe_App.Server.DTOs.Recipe;
 using Recipe_App.Server.Models;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
@@ -96,6 +96,101 @@ namespace Recipe_App.Server.Services
                     })
                     .ToArray()
             })
+                .ToList();
+
+            return result;
+        }
+
+        public async Task<List<GetRecipeResponse>> GetUserFavoriteRecipes(string id)
+        {
+
+            return new List<GetRecipeResponse>();
+
+            // Get ALL recipeIds that match any tag in the get request
+            var tagRecipeIds = await _context.RecipeTags
+                .Where(rt => tags.Contains(rt.TagId))
+                .Select(rt => rt.RecipeId)
+                .ToListAsync();
+
+            // Get all recipes that contain a tag from the list of tag filters
+            var recipes = await _context.Recipe
+                .Where(r => tagRecipeIds.Contains(r.RecipeId))
+                .ToListAsync();
+
+            // Grab all ingredients for recipes
+            var recipeIngredients = await _context.RecipeIngredients
+                .Join(
+                    _context.Ingredients,
+                    ri => ri.IngredientId,
+                    i => i.IngredientId,
+                    (ri, i) => new
+                    {
+                        ri.RecipeId,
+                        i.IngredientId,
+                        i.Name,
+                        ri.Quantity,
+                        ri.UnitId
+                    }
+                )
+                .LeftJoin(
+                    _context.Units,
+                    ri => ri.UnitId,
+                    u => u.UnitId,
+                    (ri, u) => new
+                    {
+                        ri.RecipeId,
+                        ri.IngredientId,
+                        ri.Name,
+                        ri.Quantity,
+                        UnitName = u.Name,
+                        u.Abbreviation
+                    }
+
+                )
+                .Where(ri => tagRecipeIds.Contains(ri.RecipeId))
+                .ToListAsync();
+
+            // Fetch all tags for those recipes as well
+            var recipeTags = await _context.RecipeTags
+                .Join(
+                    _context.Tags,
+                    rt => rt.TagId,
+                    t => t.TagId,
+                    (rt, t) => new
+                    {
+                        rt.RecipeId,
+                        t.TagId,
+                        t.Name
+                    }
+
+                )
+                .Where(t => tagRecipeIds.Contains(t.RecipeId))
+                .ToListAsync();
+
+            // Build the response
+            var result = recipes
+                .Select(r => new GetRecipeResponse
+                {
+                    RecipeId = r.RecipeId,
+                    Image = r.RecipeImage,
+                    Name = r.Name,
+                    Instructions = r.Instructions,
+                    Tags = recipeTags
+                        .Where(t => t.RecipeId.Equals(r.RecipeId))
+                        .Select(t => t.Name)
+                        .ToArray(),
+                    Ingredients = recipeIngredients
+                        .Where(i => i.RecipeId.Equals(r.RecipeId))
+                        .Select(i => new GetRecipeIngredientResponse
+                        {
+                            IngredientId = i.IngredientId,
+                            IngredientName = i.Name,
+                            IngredientQuantity = i.Quantity,
+                            IngredientUnitName = i.UnitName,
+                            IngredientUnitAbbreviation = i.Abbreviation
+                        })
+                        .ToArray()
+                })
                 .ToList();
 
             return result;

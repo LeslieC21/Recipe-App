@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Recipe_App.Server.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Recipe_App.Server.Models
+namespace Recipe_App.Server.DTOs.Recipe
 {
     public class IngredientInfoModel
     {

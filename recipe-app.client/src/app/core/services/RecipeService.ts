@@ -30,7 +30,7 @@ export class RecipeService {
   }
 
   getRecipeByName(name: string) {
-    return this.httpClient.get<RecipeModel[]>(`Recipe/Find/RecipeName/${name}`);
+    return this.httpClient.get<RecipeModel[]>(`/Recipe/Find/RecipeName/${name}`);
   }
 
   getUnits() {
@@ -63,7 +63,7 @@ export class RecipeService {
 
     console.log(getReq);
 
-    return this.httpClient.post<RecipeModel[]>('Recipe/Find/Recipe/Filters', getReq)
+    return this.httpClient.post<RecipeModel[]>('/Recipe/Find/Recipe/Filters', getReq)
   }
 
   newRecipeTag(name: string) {
@@ -86,11 +86,11 @@ export class RecipeService {
 
   // Post Method to create a new ingredient
   newIngredient(addReq: CreateIngredientRequest) {
-    return this.httpClient.post('Recipe/New/Ingredient', addReq);
+    return this.httpClient.post('/Recipe/New/Ingredient', addReq);
   }
 
   // Post Method to create a new recipe
   newRecipe(addReq: FormData) {
-    return this.httpClient.post('Recipe/New/Recipe', addReq);
+    return this.httpClient.post('/Recipe/New/Recipe', addReq);
   }
 }

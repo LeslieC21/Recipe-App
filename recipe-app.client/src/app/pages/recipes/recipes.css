@@ -25,6 +25,7 @@ header h1 {
 
 .container {
   background: var(--color-bg);
+  box-shadow: var(--shadow-md);
   min-height: 85vh;
   padding: 1rem;
   margin: 1rem;

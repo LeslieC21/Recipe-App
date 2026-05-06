@@ -1,5 +1,5 @@
 ﻿using Recipe_App.Server.Data;
-using Recipe_App.Server.DTOs;
+using Recipe_App.Server.DTOs.Recipe;
 using Recipe_App.Server.Models;
 
 namespace Recipe_App.Server.Services
@@ -10,6 +10,8 @@ namespace Recipe_App.Server.Services
 
         // Returns ALL Recipes
         Task<List<GetRecipeResponse>> GetRecipesAsync();
+        // Returns a list of recipes that a user has favorited
+        Task<List<GetRecipeResponse>> GetUserFavoriteRecipes(string id);
         // Returns list of recipes that have this string in its name
         Task<List<GetRecipeResponse>> GetRecipesByNameAsync(string name);
         // Returns recipes that have this id

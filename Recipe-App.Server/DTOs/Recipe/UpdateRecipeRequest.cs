@@ -1,6 +1,4 @@
-﻿using Recipe_App.Server.Models;
-
-namespace Recipe_App.Server.DTOs
+﻿namespace Recipe_App.Server.DTOs.Recipe
 {
     public class UpdateRecipeRequest
     {

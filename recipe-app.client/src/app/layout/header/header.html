@@ -19,17 +19,17 @@
         </li>
         <li>
           <a [routerLink]="['/Recipe-List']">
-            Upload Ingredient(s)
-          </a>
-        </li>
-        <li>
-          <a [routerLink]="['/Recipe-List']">
-            Create New Tag
-          </a>
-        </li>
-        <li>
-          <a [routerLink]="['/Recipe-List']">
             Favorite Recipes
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/Recipe-List']">
+            Profile
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/Login']">
+            Log out
           </a>
         </li>
       </ul>
@@ -62,13 +62,13 @@
               <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Create-Recipe']">Upload Recipe</button>
             </li>
             <li>
-              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Upload Ingredient(s)</button>
-            </li>
-            <li>
-              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Create New Tag</button>
-            </li>
-            <li>
               <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Favorite Recipes</button>
+            </li>
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Profile</button>
+            </li>
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Login']">Log out</button>
             </li>
           </ul>
         </div>

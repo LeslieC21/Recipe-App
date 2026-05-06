@@ -1,0 +1,27 @@
+.container {
+  display: grid;
+  place-content: center;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-md);
+  min-height: 85vh;
+  padding: 1rem;
+  margin: 1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.form-group {
+  display: flex;
+  box-sizing: border-box;
+  border: 1px solid purple;
+  width: 100%;
+}
+
+  .form-group input {
+    width: 100%;
+    margin: 1rem;
+  }

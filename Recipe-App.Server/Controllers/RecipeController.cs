@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Recipe_App.Server.DTOs;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Recipe_App.Server.DTOs.Recipe;
 using Recipe_App.Server.Models;
 using Recipe_App.Server.Services;
 using System.Diagnostics;
@@ -20,6 +21,14 @@ namespace Recipe_App.Server.Controllers
         public async Task<ActionResult<List<GetRecipeResponse>>> GetAllRecipesAsync()
         {
             return (Ok(await service.GetRecipesAsync()));
+        }
+
+        // Returns a list of all recipes for specific user
+        [Authorize]
+        [HttpGet("Find/FavoriteRecipes/{id}")]
+        public async Task<ActionResult<List<GetRecipeResponse>>> GetUserFavoriteRecipes(string id)
+        {
+            return (Ok(await service.GetUserFavoriteRecipes(id)));
         }
 
         // Returns Recipes with matching or exact Name

@@ -7,6 +7,7 @@ const PROXY_CONFIG = [
   {
     context: [
       "/Recipe",
+      "/Token"
     ],
     target,
     secure: false

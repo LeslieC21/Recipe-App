@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Recipe_App.Server.DTOs
+namespace Recipe_App.Server.DTOs.Recipe
 {
     public class GetRecipeResponse
     {

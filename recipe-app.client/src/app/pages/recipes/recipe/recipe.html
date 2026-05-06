@@ -14,9 +14,11 @@
   @if(showRecipeDetails()) {
   <div class="recipe-details">
     <hr />
-    @for(tag of recipe.tags; track $index) {
-    <h3>{{ tag | capitalize}}</h3>
-    }
+    <div class="recipe-details-tags">
+      @for(tag of recipe.tags; track $index) {
+      <h3>{{ tag | capitalize}}</h3>
+      }
+    </div>
     <h4>Ingredients: </h4>
     <ul>
       @for(ingredient of recipe.ingredients; track ingredient.ingredientId) {

@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
 import { Recipes } from './pages/recipes/recipes';
 import { CreateRecipe } from './pages/create-recipe/create-recipe';
+import { Login } from './pages/login/login';
 
 export const routes: Routes = [
   {
@@ -26,8 +27,12 @@ export const routes: Routes = [
     data: { showNavbar: true }
   },
   {
+    path: 'Login',
+    component: Login,
+    data: { showNavbar: true }
+  },
+  {
     path: '**',
-    component: Home,
-    data: { showNavbar: false }
+    redirectTo: ''
   }
 ]

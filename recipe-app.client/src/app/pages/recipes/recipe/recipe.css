@@ -87,12 +87,18 @@ header {
     animation-fill-mode: forwards;
   }
 
+.recipe-details-tags {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+}
+
 @keyframes FavoriteHeartFill {
   from {
     color: var(--color-text);
   }
 
   to {
-      color: red;
+    color: red;
   }
 }
