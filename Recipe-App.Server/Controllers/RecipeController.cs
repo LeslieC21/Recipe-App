@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Recipe_App.Server.DTOs.Recipe;
 using Recipe_App.Server.Models;
 using Recipe_App.Server.Services;
-using System.Diagnostics;
 
 namespace Recipe_App.Server.Controllers
 {
@@ -24,11 +23,12 @@ namespace Recipe_App.Server.Controllers
         }
 
         // Returns a list of all recipes for specific user
+        // Only allow logged in users to fetch from this endpoint
         [Authorize]
-        [HttpGet("Find/FavoriteRecipes/{id}")]
-        public async Task<ActionResult<List<GetRecipeResponse>>> GetUserFavoriteRecipes(string id)
+        [HttpGet("Find/FavoriteRecipes")]
+        public async Task<ActionResult<List<GetRecipeResponse>>> GetUserFavoriteRecipes()
         {
-            return (Ok(await service.GetUserFavoriteRecipes(id)));
+            return (Ok(await service.GetUserFavoriteRecipes()));
         }
 
         // Returns Recipes with matching or exact Name
@@ -137,11 +137,20 @@ namespace Recipe_App.Server.Controllers
             return (Ok(await service.GetRecipesByTagsAsync(tags)));
         }
 
+
         // Returns Recipes with matching Ingredient(s)
         [HttpPost("Find/RecipeIngredient")]
         public async Task<ActionResult<List<GetRecipeResponse>>> GetRecipesByIngredientsAsync(string[] ingredients)
         {
             return (Ok(await service.GetRecipesByIngredientsAsync(ingredients)));
+        }
+
+        [Authorize]
+        [HttpPost("New/FavoriteRecipe")]
+        public async Task<ActionResult<bool>> CreateUserFavoriteRecipe(AddDeleteFavoriteRecipeRequest request)
+        {
+            Console.WriteLine($"Received recipeId: {request}");
+            return (Ok(await service.CreateUserFavoriteRecipe(request)));
         }
 
         [HttpPost("Find/Recipe/Filters")]
@@ -265,6 +274,14 @@ namespace Recipe_App.Server.Controllers
         public async Task<ActionResult<bool>> DeleteUnitAsync(string unitid)
         {
             return (Ok(await service.DeleteUnitAsync(unitid)));
+        }
+
+        // Remove a Users Favorite recipe
+        [Authorize]
+        [HttpDelete("Delete/FavoriteRecipe/{recipeId}")]
+        public async Task<ActionResult<bool>> DeleteUserFavoriteRecipe(string recipeId)
+        {
+            return (Ok(await service.DeleteUserFavoriteRecipe(recipeId)));
         }
     }
 

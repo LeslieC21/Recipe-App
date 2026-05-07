@@ -1,9 +1,9 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { form, debounce, FormField } from '@angular/forms/signals';
-import { map }  from 'rxjs'
+import { map } from 'rxjs'
 
-import { Recipe } from './recipe/recipe';
+import { Recipe } from '../recipes/recipe/recipe';
 import { RecipeModel } from '../../core/models/RecipeModel';
 import { TagModel } from '../../core/models/TagModel';
 import { IngredientModel } from '../../core/models/IngredientModel';
@@ -16,13 +16,12 @@ interface SearchModel {
 }
 
 @Component({
-  selector: 'app-recipes',
-  imports: [Recipe, FormField, FormsModule],
-  templateUrl: './recipes.html',
-  styleUrl: './recipes.css',
+  selector: 'app-favorite-recipes',
+  imports: [FormField, Recipe],
+  templateUrl: './favorite-recipes.html',
+  styleUrl: './favorite-recipes.css',
 })
-
-export class Recipes implements OnInit {
+export class FavoriteRecipes {
   // Injects
   RService = inject(RecipeService);
   destroyRef = inject(DestroyRef);
@@ -47,13 +46,11 @@ export class Recipes implements OnInit {
   })
 
   // Method that holds the API request
-  getRecipes() {
-    console.log("getRecipes called", event);
+  getFavoriteRecipes() {
     this.isLoading.set(true);
-    const subscription = this.RService.getRecipes()
+    const subscription = this.RService.getUserFavoriteRecipes()
       .pipe(
         map(switchMap => {
-          console.log(switchMap);
           switchMap.forEach((recipe) => {
             if (recipe.image) {
               const base64 = recipe.image as string;
@@ -62,19 +59,21 @@ export class Recipes implements OnInit {
               recipe.image = new Blob([bytes], { type: 'image/jpeg' });
             }
           })
-          console.log(switchMap);
           return switchMap;
         })
       )
       .subscribe(x => {
-        console.log(x);
-        console.log(this.recipes());
         this.recipes.set(x);
         this.isLoading.set(false);
-    });
+      });
     this.destroyRef.onDestroy(() => {
       subscription.unsubscribe();
     });
+  }
+
+  removeRecipeFromFavorites() {
+    // Update recipes
+    this.getFavoriteRecipes();
   }
 
   // Event from child component that is triggered when a user selects a recipe to view
@@ -93,7 +92,7 @@ export class Recipes implements OnInit {
     const tags = this.searchModel().recipeTags;
 
     if (checked) {
-      if (!tags.includes(value)) 
+      if (!tags.includes(value))
         tags.push(value);
     } else {
       const idx = tags.indexOf(value);
@@ -176,7 +175,7 @@ export class Recipes implements OnInit {
 
     console.log("Changed");
     if (this.searchModel().recipeName == '') {
-      this.getRecipes();
+      this.getFavoriteRecipes();
       return;
     }
 
@@ -190,7 +189,7 @@ export class Recipes implements OnInit {
 
   // Method to search recipes by their ingredients or tags
   doFilterSearch(event: Event | undefined) {
-    if(event)
+    if (event)
       event.preventDefault();
 
     const subscription = this.RService.getRecipesByFilter(this.searchModel().recipeTags, this.searchModel().recipeIngredients)
@@ -231,7 +230,7 @@ export class Recipes implements OnInit {
 
   ngOnInit() {
     // Method to get all recipes from db
-    this.getRecipes();
+    this.getFavoriteRecipes();
     this.getSearchTags();
     this.getSearchIngredients();
   }

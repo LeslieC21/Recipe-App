@@ -11,7 +11,7 @@ namespace Recipe_App.Server.Services
         // Returns ALL Recipes
         Task<List<GetRecipeResponse>> GetRecipesAsync();
         // Returns a list of recipes that a user has favorited
-        Task<List<GetRecipeResponse>> GetUserFavoriteRecipes(string id);
+        Task<List<GetRecipeResponse>> GetUserFavoriteRecipes();
         // Returns list of recipes that have this string in its name
         Task<List<GetRecipeResponse>> GetRecipesByNameAsync(string name);
         // Returns recipes that have this id
@@ -47,6 +47,7 @@ namespace Recipe_App.Server.Services
         Task<List<GetRecipeResponse>> GetRecipesByTagsAsync(string[] tags);
         // Returns list of recipes that have this ingredientid in its ingredients
         Task<List<GetRecipeResponse>> GetRecipesByIngredientsAsync(string[] ingredients);
+        Task<bool> CreateUserFavoriteRecipe(AddDeleteFavoriteRecipeRequest request);
         // Returns a list of recipes that have these tags or ingredients in it
         Task<List<GetRecipeResponse>> GetRecipeByFilters(GetRecipeByFiltersRequest getReq);
         Task<bool> CreateTagAsync(CreateTagRequest request);
@@ -80,5 +81,6 @@ namespace Recipe_App.Server.Services
         Task<bool> DeleteIngredientAsync(string ingredientId);
         // Delete Unit
         Task<bool> DeleteUnitAsync(string unitid);
+        Task<bool> DeleteUserFavoriteRecipe(string recipeId);
     }
 }

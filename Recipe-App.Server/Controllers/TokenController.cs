@@ -10,7 +10,7 @@ namespace Recipe_App.Server.Controllers
     public class TokenController(ITokenService service) : ControllerBase
     {
         [HttpPost("Register")]
-        public async Task<ActionResult<string?>> RegisterUserAsync(CreateProfileRequest request)
+        public async Task<ActionResult<TokenResponse?>> RegisterUserAsync(CreateProfileRequest request)
         {
             var user = await service.RegisterUserAsync(request);
 
@@ -21,12 +21,12 @@ namespace Recipe_App.Server.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult<string?>> LoginUserAsync(LoginUserRequest request)
+        public async Task<ActionResult<TokenResponse?>> LoginUserAsync(LoginUserRequest request)
         {
             var user = await service.LoginUserAsync(request);
 
             if (user is null)
-                return BadRequest("Incorrect Username or Password.");
+                return BadRequest("Incorrect Username or Password");
 
             return Ok(user);
         }
@@ -38,7 +38,7 @@ namespace Recipe_App.Server.Controllers
         }
 
         [HttpPost("Refresh")]
-        public async Task<ActionResult<string?>> RefreshAsync()
+        public async Task<ActionResult<TokenResponse?>> RefreshAsync()
         {
             return (Ok(service.RefreshAsync()));
         }

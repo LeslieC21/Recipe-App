@@ -1,9 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens.Experimental;
 using Recipe_App.Server.Data;
 using Recipe_App.Server.DTOs.Recipe;
 using Recipe_App.Server.Models;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Recipe_App.Server.Services
 {
@@ -14,7 +20,7 @@ namespace Recipe_App.Server.Services
         Ingredient = 2
     }
 
-    public class RecipeService(RecipeDatabaseContext _context) : IRecipeService
+    public class RecipeService(RecipeDatabaseContext _context, IConfiguration _configuration, IHttpContextAccessor _httpContextAccessor) : IRecipeService
     {
         // GET METHODS
 
@@ -24,6 +30,58 @@ namespace Recipe_App.Server.Services
         // Return ALL Recipes
         public async Task<List<GetRecipeResponse>> GetRecipesAsync()
         {
+            // Variable that will hold the userId if there is a user logged in
+            var userId = string.Empty;
+
+            // Check if there is a cookie attached to the request (logged in user)
+            if(_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("auth_token", out var strToken))
+            {
+                // There is a cookie attached
+                // Grab the key we used to sign the JWT
+                var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_configuration.GetValue<string>("AppSettings:Token")!)
+                );
+
+                // What we need to check is valid/correct
+                var validationParameters = new TokenValidationParameters()
+                {
+                    IssuerSigningKey = key,
+                    ValidIssuer = _configuration.GetValue<string>("AppSettings:Issuer"),
+                    ValidAudience = _configuration.GetValue<string>("AppSettings:Audience"),
+                    ValidateLifetime = true,
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidateIssuerSigningKey = true
+                };
+
+                // Convert the string JWT to a Token
+                var handler = new JwtSecurityTokenHandler();
+                var Validtoken = await handler.ValidateTokenAsync(strToken, validationParameters);
+                // Check if its valid aka no subject to any attacks or changes since it was signed
+                if(Validtoken.IsValid)
+                {
+                    // Read the claims - Store userId
+                    userId = Validtoken.Claims
+                        .First(c => c.Key == ClaimTypes.NameIdentifier)
+                        .Value?.ToString();
+                } else
+                {
+                    // Invalid token clear the cookies
+                    _httpContextAccessor.HttpContext!.Response.Cookies.Delete("auth_token");
+                    _httpContextAccessor.HttpContext!.Response.Cookies.Delete("refresh_token");
+                    _httpContextAccessor.HttpContext!.Response.Cookies.Delete("logged_in");
+
+                    // Delete stored refresh token too in case it was stolen and modified
+                    var existingRefreshToken = await _context.RefreshTokens
+                        .FirstOrDefaultAsync(r => r.Token.Equals(strToken));
+
+                    if(existingRefreshToken != null)
+                    {
+                        _context.Remove(existingRefreshToken);
+                    }
+                }
+            }
+
             // Get ALL Recipes
             var recipes = await _context.Recipe.ToListAsync();
 
@@ -58,7 +116,6 @@ namespace Recipe_App.Server.Services
                 )
                 .ToListAsync();
 
-
             // All RecipeTags
             var recipeTags = await _context.RecipeTags
                 .Join(
@@ -73,48 +130,101 @@ namespace Recipe_App.Server.Services
                 )
                 .ToListAsync();
 
-
-            var result = recipes.Select(recipe => new GetRecipeResponse
+            if (userId != string.Empty)
             {
-                RecipeId = recipe.RecipeId,
-                Image = recipe.RecipeImage,
-                Name = recipe.Name,
-                Instructions = recipe.Instructions,
-                Tags = recipeTags
-                    .Where(rt => rt.RecipeId.Equals(recipe.RecipeId))
-                    .Select(rt => rt.TagName)
-                    .ToArray(),
-                Ingredients = ingredients
-                    .Where(i => i.RecipeId.Equals(recipe.RecipeId))
-                    .Select(i => new GetRecipeIngredientResponse
-                    {
-                        IngredientId = i.IngredientId,
-                        IngredientName = i.IngredientName,
-                        IngredientQuantity = i.Quantity,
-                        IngredientUnitName = i.UnitName,
-                        IngredientUnitAbbreviation = i.UnitAbbreviation
-                    })
-                    .ToArray()
-            })
-                .ToList();
+                // If there is a user logged in
 
-            return result;
+                // Grab all of the users favorites recipes
+                var favoriteRecipes = await _context.UserFavoriteRecipes
+                    .Where(r => r.UserId.Equals(userId))
+                    .Select(r => r.RecipeId)
+                    .ToListAsync();
+
+                var result = recipes.Select(recipe => new GetRecipeResponse
+                {
+                    RecipeId = recipe.RecipeId,
+                    Image = recipe.RecipeImage,
+                    Name = recipe.Name,
+                    Instructions = recipe.Instructions,
+                    Tags = recipeTags
+                        .Where(rt => rt.RecipeId.Equals(recipe.RecipeId))
+                        .Select(rt => rt.TagName)
+                        .ToArray(),
+                    Ingredients = ingredients
+                        .Where(i => i.RecipeId.Equals(recipe.RecipeId))
+                        .Select(i => new GetRecipeIngredientResponse
+                        {
+                            IngredientId = i.IngredientId,
+                            IngredientName = i.IngredientName,
+                            IngredientQuantity = i.Quantity,
+                            IngredientUnitName = i.UnitName,
+                            IngredientUnitAbbreviation = i.UnitAbbreviation
+                        })
+                        .ToArray(),
+                    IsFavorite = favoriteRecipes
+                        .Any(r => r.Equals(recipe.RecipeId))
+                })
+                    .ToList();
+
+                return result;
+            }
+            else
+            {
+                // There is not a user logged in
+                var result = recipes.Select(recipe => new GetRecipeResponse
+                {
+                    RecipeId = recipe.RecipeId,
+                    Image = recipe.RecipeImage,
+                    Name = recipe.Name,
+                    Instructions = recipe.Instructions,
+                    Tags = recipeTags
+                        .Where(rt => rt.RecipeId.Equals(recipe.RecipeId))
+                        .Select(rt => rt.TagName)
+                        .ToArray(),
+                    Ingredients = ingredients
+                        .Where(i => i.RecipeId.Equals(recipe.RecipeId))
+                        .Select(i => new GetRecipeIngredientResponse
+                        {
+                            IngredientId = i.IngredientId,
+                            IngredientName = i.IngredientName,
+                            IngredientQuantity = i.Quantity,
+                            IngredientUnitName = i.UnitName,
+                            IngredientUnitAbbreviation = i.UnitAbbreviation
+                        })
+                        .ToArray()
+                })
+                    .ToList();
+
+                return result;
+            }
         }
 
-        public async Task<List<GetRecipeResponse>> GetUserFavoriteRecipes(string id)
+        public async Task<List<GetRecipeResponse>> GetUserFavoriteRecipes()
         {
+            // Grab JWT that is stored in the cookie
+            if (!_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("auth_token", out var strToken))
+            {
+                // There is no auth_token
+                // Return empty list
+                return new List<GetRecipeResponse>();
+            }
 
-            return new List<GetRecipeResponse>();
+            // We have the token, convert the string token to a JwtSecurityToken
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(strToken);
 
-            // Get ALL recipeIds that match any tag in the get request
-            var tagRecipeIds = await _context.RecipeTags
-                .Where(rt => tags.Contains(rt.TagId))
+            // Access the tokens claims - store the userId
+            var userId = token.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
+
+            // Get ALL recipeIds (string) that match our user
+            var userRecipeIds = await _context.UserFavoriteRecipes
+                .Where(f => f.UserId.Equals(userId))
                 .Select(rt => rt.RecipeId)
                 .ToListAsync();
 
-            // Get all recipes that contain a tag from the list of tag filters
+            // Get all recipes (RecipeModel) from the recipeids (string)
             var recipes = await _context.Recipe
-                .Where(r => tagRecipeIds.Contains(r.RecipeId))
+                .Where(r => userRecipeIds.Contains(r.RecipeId))
                 .ToListAsync();
 
             // Grab all ingredients for recipes
@@ -147,7 +257,7 @@ namespace Recipe_App.Server.Services
                     }
 
                 )
-                .Where(ri => tagRecipeIds.Contains(ri.RecipeId))
+                .Where(ri => userRecipeIds.Contains(ri.RecipeId))
                 .ToListAsync();
 
             // Fetch all tags for those recipes as well
@@ -164,7 +274,7 @@ namespace Recipe_App.Server.Services
                     }
 
                 )
-                .Where(t => tagRecipeIds.Contains(t.RecipeId))
+                .Where(t => userRecipeIds.Contains(t.RecipeId))
                 .ToListAsync();
 
             // Build the response
@@ -189,7 +299,8 @@ namespace Recipe_App.Server.Services
                             IngredientUnitName = i.UnitName,
                             IngredientUnitAbbreviation = i.Abbreviation
                         })
-                        .ToArray()
+                        .ToArray(),
+                    IsFavorite = true
                 })
                 .ToList();
 
@@ -815,6 +926,52 @@ namespace Recipe_App.Server.Services
             return result;
         }
 
+
+        // Returns true if recipe was added to a users favorites successfully
+        public async Task<bool> CreateUserFavoriteRecipe(AddDeleteFavoriteRecipeRequest request)
+        {
+            // Grab JWT that is stored in the cookie to get our user
+            if (!_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("auth_token", out var strToken))
+            {
+                // There is no auth_token - Return false
+                return false;
+            }
+
+            // We have the token, convert the string token to a JwtSecurityToken
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(strToken);
+
+            // Access the tokens claims - store the userId
+            var userId = token.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
+
+            // Grab the user with the same Id as the request id
+            var user = await _context.Users
+                .FirstOrDefaultAsync(r => r.UserId.Equals(userId));
+
+            // Check if user exists
+            if (user is null)
+                return false;
+
+            // Check if user already has requested recipe in their favorites
+            var existingRecipeId = await _context.UserFavoriteRecipes
+                .FirstOrDefaultAsync(u => u.UserId.Equals(userId) && u.RecipeId.Equals(request.recipeId));
+            if (existingRecipeId != null) 
+                return false;
+
+            // Create new row for userfavorite recipes
+            var newFavoriteRecipe = new UserFavoriteRecipes
+            {
+                UserId = userId,
+                RecipeId = request.recipeId
+            };
+
+            await _context.AddAsync(newFavoriteRecipe);
+            await _context.SaveChangesAsync();
+
+            // Success
+            return true;
+        }
+
         // Create NEW Tag
         public async Task<bool> CreateTagAsync(CreateTagRequest request)
         {
@@ -1212,6 +1369,40 @@ namespace Recipe_App.Server.Services
 
             // Delete the tag
             _context.Remove(existingIngredient);
+            await _context.SaveChangesAsync();
+
+            // Success
+            return true;
+        }
+
+        // Remove recipe from user favorite recipes
+        public async Task<bool> DeleteUserFavoriteRecipe(string recipeId)
+        {
+            // Grab JWT that is stored in the cookie
+            if (!_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("auth_token", out var strToken))
+            {
+                // There is no auth_token
+                // Return false
+                return false;
+            }
+
+            // We have the token, convert the string token to a JwtSecurityToken
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(strToken);
+
+            // Access the tokens claims - store the userId
+            var userId = token.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
+
+            // Grab the UserFavoriteRecipe row
+            var userFavoriteRecipe = await _context.UserFavoriteRecipes
+                .FirstOrDefaultAsync(u => u.UserId.Equals(userId) && u.RecipeId.Equals(recipeId));
+
+            // If selected recipe isnt in a users favorites - early return false
+            if (userFavoriteRecipe is null)
+                return false;
+
+            // Remove Recipe from favorites
+            _context.Remove(userFavoriteRecipe);
             await _context.SaveChangesAsync();
 
             // Success

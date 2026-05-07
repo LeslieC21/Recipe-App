@@ -12,7 +12,7 @@
         <div class="form_group-title">
           <label for="file-input">Upload Recipe Image</label>
           <label for="file-input" class="custom-file-upload">Choose File</label>
-          <input type="file" id="file-input" accept=".jpg, .jpeg, .png, .webp, .svg" class="form_group-file" (change)="onFileSelected($event)"/>
+          <input type="file" id="file-input" accept=".jpg, .jpeg, .png, .webp, .svg" class="form_group-file" (change)="onFileSelected($event)" />
         </div>
         <p class="form_group-file-text" (click)="onFileRemove()"> × {{ (recipeForm.recipeImage().value())?.name ?? 'No File Selected...' }}</p>
       </div>
@@ -70,9 +70,9 @@
         </div>
         }
       </div>
-      <button class="form_submit-button" (click)="submitRecipeForm($event)">Submit</button>
     </form>
   </main>
+  <button class="form_submit-button" (click)="submitRecipeForm($event)">Submit</button>
 </div>
 
 

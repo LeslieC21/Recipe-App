@@ -1,9 +1,9 @@
 <button (click)="toggleRecipeDetails()" class="container">
   <header [style.background-image]="imageURL()">
     <div class="header-btns">
-      <button [style.color]="isFavorite() ? 'red' : 'var(--color-text)'"
+      <button [style.color]="recipe.isFavorite ? 'red' : 'var(--color-text)'"
               class="FavoriteBtn"
-              (click)="toggleFavoriteRecipe(); $event.stopPropagation()"
+              (click)="toggleFavoriteRecipe($event); $event.stopPropagation()"
               aria-label="Favorite-Recipe-Button">
         &#9829;
       </button>

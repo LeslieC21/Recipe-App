@@ -1,7 +1,6 @@
 .container {
-    display: inline-block;
+  display: inline-block;
   width: 100%;
-  height: auto;
   padding: 1rem;
   border: 2px solid var(--color-bg);
   background-color: var(--color-text);

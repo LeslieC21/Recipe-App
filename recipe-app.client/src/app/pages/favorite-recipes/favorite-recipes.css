@@ -13,10 +13,10 @@ header, .loading-text {
   margin: 2rem;
 }
 
-header h1 {
+  header h1 {
     border-bottom: 1px solid white;
     padding-bottom: 1rem;
-}
+  }
 
 .loading-text {
   animation: loadingAnimation 2s infinite;
@@ -52,13 +52,13 @@ header h1 {
   place-self: center;
 }
 
-  .search-form > div {
-    display: flex;
-    align-items: stretch;
-    width: 100%;
-    margin-right: 2rem;
-    gap: 1rem;
-  }
+.search-form > div {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin-right: 2rem;
+  gap: 1rem;
+}
 
 .search-input {
   flex: 1;
@@ -66,9 +66,9 @@ header h1 {
   box-sizing: border-box;
 }
 
-.search-input:focus {
-  font-size: 70%;
-}
+  .search-input:focus {
+    font-size: 70%;
+  }
 
 .filter-button {
   background-color: transparent;
@@ -81,16 +81,16 @@ header h1 {
     width: 100%;
   }
 
-  .search-button {
-    background-image: url('/search-button.png');
-    background-color: transparent;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    padding: 1rem;
-    border: none;
-    height: 100%;
-  }
+.search-button {
+  background-image: url('/search-button.png');
+  background-color: transparent;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  padding: 1rem;
+  border: none;
+  height: 100%;
+}
 
 .search-criteria {
   display: flex;
@@ -115,10 +115,10 @@ header h1 {
 }
 
 .search-items {
-    display: flex;
-    justify-content: space-evenly;
-    flex-wrap: wrap;
-    margin: .5rem;
+  display: flex;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  margin: .5rem;
 }
 
 .search-criteria-buttons {
@@ -146,21 +146,21 @@ header h1 {
       background-color: #e1e1e1e2;
     }
 
-  @keyframes loadingAnimation {
-    0% {
-      color: var(--color-text);
-    }
-
-    50% {
-      color: #ffffff87;
-      text-shadow: .2px;
-    }
-
-    100% {
-      transition: width .25s ease-in;
-      color: var(--color-text);
-    }
+@keyframes loadingAnimation {
+  0% {
+    color: var(--color-text);
   }
+
+  50% {
+    color: #ffffff87;
+    text-shadow: .2px;
+  }
+
+  100% {
+    transition: width .25s ease-in;
+    color: var(--color-text);
+  }
+}
 /* Tablets Portrait */
 /*@media (min-width: 600px) {
 
@@ -177,7 +177,7 @@ header h1 {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 2rem;
     box-sizing: border-box;
-/*    Each Item is only as tall as ITS content- regardless of neighbours*/
+    /*    Each Item is only as tall as ITS content- regardless of neighbours*/
     align-items: start;
   }
 

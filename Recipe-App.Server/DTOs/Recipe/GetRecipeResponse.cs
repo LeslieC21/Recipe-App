@@ -27,5 +27,8 @@ namespace Recipe_App.Server.DTOs.Recipe
          *                  IngredientUnitName: String  - UNIT TABLE
          *                  IngredientUnitAbbreviation: String
                           }*/
+
+        // FROM USERFAVORITE RECIPES
+        public bool? IsFavorite { get; set; }
     }
 }

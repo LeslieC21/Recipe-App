@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { Home } from './pages/home/home';
 import { Recipes } from './pages/recipes/recipes';
+import { FavoriteRecipes } from './pages/favorite-recipes/favorite-recipes';
 import { CreateRecipe } from './pages/create-recipe/create-recipe';
 import { Login } from './pages/login/login';
 
@@ -19,6 +20,11 @@ export const routes: Routes = [
   {
     path: 'Recipe-List',
     component: Recipes,
+    data: { showNavbar: true }
+  },
+  {
+    path: 'Favorite-Recipes',
+    component: FavoriteRecipes,
     data: { showNavbar: true }
   },
   {

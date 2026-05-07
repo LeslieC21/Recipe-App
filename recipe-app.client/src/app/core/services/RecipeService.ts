@@ -8,6 +8,7 @@ import { RecipeModel } from '../models/RecipeModel';
 import { CreateTagRequest } from '../models/RequestModels/CreateTagRequest';
 import { CreateIngredientRequest } from '../models/RequestModels/CreateIngredientRequest';
 import { GetRecipeByFiltersRequest } from '../models/RequestModels/GetRecipeByFiltersRequest';
+import { AddDeleteFavoriteRecipe } from '../models/RequestModels/AddDeleteFavoriteRecipe';
  
 
 @Injectable({
@@ -27,6 +28,10 @@ export class RecipeService {
   // Get Method to return ALL recipes
   getRecipes() {
     return this.httpClient.get<RecipeModel[]>('/Recipe/Find/AllRecipes');
+  }
+
+  getUserFavoriteRecipes() {
+    return this.httpClient.get<RecipeModel[]>(`/Recipe/Find/FavoriteRecipes`);
   }
 
   getRecipeByName(name: string) {
@@ -92,5 +97,23 @@ export class RecipeService {
   // Post Method to create a new recipe
   newRecipe(addReq: FormData) {
     return this.httpClient.post('/Recipe/New/Recipe', addReq);
+  }
+
+  // Post Method to add a favorite Recipe
+  addToFavorites(recipeId: string) {
+    const addReq: AddDeleteFavoriteRecipe = ({
+      recipeId: recipeId
+    })
+
+    return this.httpClient.post('/Recipe/New/FavoriteRecipe', addReq);
+  }
+
+  // Delete Method to remove a favorite recipe
+  deleteFromFavorites(recipeId: string) {
+    const deleteReq: AddDeleteFavoriteRecipe = ({
+      recipeId: recipeId
+    });
+
+    return this.httpClient.delete(`/Recipe/Delete/FavoriteRecipe/${recipeId}`);
   }
 }

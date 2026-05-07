@@ -12,9 +12,9 @@ using System.Text;
 
 namespace Recipe_App.Server.Services
 {
-    public class TokenService(RecipeDatabaseContext _context, IConfiguration configuratoin, IHttpContextAccessor _httpContextAccessor) : ITokenService
+    public class TokenService(RecipeDatabaseContext _context, IConfiguration _configuration, IHttpContextAccessor _httpContextAccessor) : ITokenService
     {
-        public async Task<string?> RegisterUserAsync(CreateProfileRequest request)
+        public async Task<TokenResponse?> RegisterUserAsync(CreateProfileRequest request)
         {
             // Check if username already exists
             if (await _context.Users.AnyAsync(u => u.Username.Equals(request.Username)))
@@ -43,10 +43,13 @@ namespace Recipe_App.Server.Services
                 Username = request.Username
             };
 
-            return CreateToken(userLogin);
+            return new TokenResponse
+            {
+                token = CreateToken(userLogin)
+            };
         }
 
-        public async Task<string?> LoginUserAsync(LoginUserRequest request)
+        public async Task<TokenResponse?> LoginUserAsync(LoginUserRequest request)
         {
             // Find the username that wants to log in
             var user = await _context.Users
@@ -71,7 +74,10 @@ namespace Recipe_App.Server.Services
                 Username = request.Username
             };
 
-            return CreateToken(userLogin);
+            return new TokenResponse
+            {
+                token = CreateToken(userLogin)
+            };
         }
 
         public async Task<bool> LogoutUserAsync()
@@ -80,7 +86,7 @@ namespace Recipe_App.Server.Services
             if (_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("refresh_token", out var refreshToken))
             {
                 var storedToken = await _context.RefreshTokens
-                    .FirstOrDefaultAsync(r => r.Token.Equals(refreshToken));
+                    .FirstOrDefaultAsync(r => r.TokenId.Equals(refreshToken));
 
                 if (storedToken != null)
                 {
@@ -92,11 +98,12 @@ namespace Recipe_App.Server.Services
             // Clear both cookies
             _httpContextAccessor.HttpContext!.Response.Cookies.Delete("auth_token");
             _httpContextAccessor.HttpContext!.Response.Cookies.Delete("refresh_token");
+            _httpContextAccessor.HttpContext!.Response.Cookies.Delete("logged_in");
 
             return true;
         }
 
-        public async Task<string?> RefreshAsync()
+        public async Task<TokenResponse?> RefreshAsync()
         {
             // Read the refresh token from its own cookie
             if (!_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("refresh_token", out var refreshToken))
@@ -124,7 +131,10 @@ namespace Recipe_App.Server.Services
             var token = CreateToken(userLogin);
             await CreateRefreshToken(userLogin);
 
-            return token;
+            return new TokenResponse
+            {
+                token = token
+            };
         }
 
         // Private method to create a token for user login
@@ -139,7 +149,7 @@ namespace Recipe_App.Server.Services
             };
 
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(configuratoin.GetValue<string>("AppSettings:Token")!)
+                Encoding.UTF8.GetBytes(_configuration.GetValue<string>("AppSettings:Token")!)
                 );
 
             // HmacSha512 is a hash algorithm - one we chose.
@@ -147,8 +157,8 @@ namespace Recipe_App.Server.Services
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
             var tokenDescriptor = new JwtSecurityToken(
-                issuer: configuratoin.GetValue<string>("AppSettings:Issuer"),
-                audience: configuratoin.GetValue<string>("AppSettings:Audience"),
+                issuer: _configuration.GetValue<string>("AppSettings:Issuer"),
+                audience: _configuration.GetValue<string>("AppSettings:Audience"),
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(30),
                 signingCredentials: creds
@@ -161,6 +171,14 @@ namespace Recipe_App.Server.Services
             _httpContextAccessor.HttpContext!.Response.Cookies.Append("auth_token", token, new CookieOptions
             {
                 HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(30)
+            });
+
+            // Send another cookie that CAN be read by JS so that we can toggle UI changes based on if user is logged in
+            _httpContextAccessor.HttpContext!.Response.Cookies.Append("logged_in", "true", new CookieOptions
+            {
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddMinutes(30)
@@ -195,6 +213,14 @@ namespace Recipe_App.Server.Services
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddDays(7)
+            });
+
+            // Send another cookie that CAN be read by JS so that we can toggle UI changes based on if user is logged in
+            _httpContextAccessor.HttpContext!.Response.Cookies.Append("logged_in", "true", new CookieOptions
+            {
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(30)
             });
         }
     }

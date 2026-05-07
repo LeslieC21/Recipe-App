@@ -5,9 +5,9 @@ namespace Recipe_App.Server.Services
 {
     public interface ITokenService
     {
-        Task<string?> RegisterUserAsync(CreateProfileRequest request);
-        Task<string?> LoginUserAsync(LoginUserRequest request);
-        Task<string?> RefreshAsync();
+        Task<TokenResponse?> RegisterUserAsync(CreateProfileRequest request);
+        Task<TokenResponse> LoginUserAsync(LoginUserRequest request);
+        Task<TokenResponse?> RefreshAsync();
         Task<bool> LogoutUserAsync();
     }
 }

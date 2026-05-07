@@ -18,7 +18,7 @@
           </a>
         </li>
         <li>
-          <a [routerLink]="['/Recipe-List']">
+          <a [routerLink]="['/Favorite-Recipes']">
             Favorite Recipes
           </a>
         </li>
@@ -27,11 +27,19 @@
             Profile
           </a>
         </li>
+        @if(AService.isLoggedIn()) {
         <li>
-          <a [routerLink]="['/Login']">
+          <a [routerLink]="['/Home']" (click)="this.AService.tryLogout()">
             Log out
           </a>
         </li>
+        } @else {
+        <li>
+          <a [routerLink]="['/Login']">
+            Log in
+          </a>
+        </li>
+        }
       </ul>
     </div>
     <div class="header_mobile">
@@ -62,14 +70,20 @@
               <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Create-Recipe']">Upload Recipe</button>
             </li>
             <li>
-              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Favorite Recipes</button>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Favorite-Recipes']">Favorite Recipes</button>
             </li>
             <li>
               <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Profile</button>
             </li>
+            @if(AService.isLoggedIn()){
             <li>
-              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Login']">Log out</button>
+              <button class="header_drawer-link" (click)="toggleSidebar(); logout()" [routerLink]="['/Login']">Log out</button>
             </li>
+            } @else {
+            <li>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Login']">Log in</button>
+            </li>
+            }
           </ul>
         </div>
       </div>

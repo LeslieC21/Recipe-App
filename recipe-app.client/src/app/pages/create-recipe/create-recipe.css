@@ -3,6 +3,13 @@
   min-height: 85vh;
   padding: 1rem;
   margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+main {
+    width: 70%;
 }
 
 header {
@@ -16,8 +23,7 @@ header {
 
 form {
   height: auto;
-  width: 70%;
-  place-self: center;
+  width: 100%;
 }
 
 .form_group {

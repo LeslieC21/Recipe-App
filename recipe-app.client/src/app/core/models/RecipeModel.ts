@@ -6,5 +6,6 @@ export interface RecipeModel {
   name: string,
   tags: string[],
   instructions: string,
-  ingredients: RecipeIngredientResponse[]
+  ingredients: RecipeIngredientResponse[],
+  isFavorite: boolean
 }
