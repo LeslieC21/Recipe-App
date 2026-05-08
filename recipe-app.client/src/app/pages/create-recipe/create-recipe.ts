@@ -3,7 +3,7 @@ import { form, required, FormField, debounce } from '@angular/forms/signals';
 import { Subscription } from 'rxjs';
 
 import { IngredientInfoModel } from '../../core/models/IngredientInfoModel';
-import { CreateIngredientRequest } from '../../core/models/RequestModels/CreateIngredientRequest';
+import { CreateIngredientRequest } from '../../core/models/RequestModels/CreateIngredientRequest'
 import { UnitModel } from '../../core/models/UnitModel';
 import { IngredientModel } from '../../core/models/IngredientModel';
 import { TagModel } from '../../core/models/TagModel';

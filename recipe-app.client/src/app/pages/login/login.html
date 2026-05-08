@@ -1,20 +1,43 @@
 <div class="container">
     <form>
       <div class="form_inner">
-        <h1>Welcome Back!</h1>
-        <h2>Login Below!</h2>
+        <header>
+          <h1>Welcome Back!</h1>
+          <h2>Login Below!</h2>
+        </header>
         <div class="form-group">
           <input type="text" placeholder="Username" [formField]="loginForm.username" />
         </div>
+        @if(this.loginForm.username().touched() && this.loginForm.username().invalid()) {
+        <ul>
+          @for(error of this.loginForm.username().errors(); track $index) {
+          <li class="error-message">{{error.message}}</li>
+          }
+        </ul>
+        }
         <div class="form-group">
           <input type="password" placeholder="Password" [formField]="loginForm.password" />
         </div>
+        @if(this.loginForm.password().touched() && this.loginForm.password().invalid()) {
+        <ul>
+          @for(error of this.loginForm.password().errors(); track $index) {
+          <li class="error-message">{{error.message}}</li>
+          }
+        </ul>
+        }
+        <!--Error Message From API Req-->
         @if(errorMessage() != null) {
-          <p>{{errorMessage()}}</p>
+        <p class="error-message">{{errorMessage()}}</p>
         }
         <div class="form-group">
           <button class="form_submit-button" (click)="tryLogin($event)">Log in</button>
         </div>
+        <footer>
+          <div class="form-group">
+            <label for="registerBtn">Dont have an account?</label>
+            <a id="registerBtn" [routerLink]="['/Register']">Register Here</a>
+          </div>
+        </footer>
       </div>
     </form>
 </div>

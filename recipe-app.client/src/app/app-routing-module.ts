@@ -5,6 +5,8 @@ import { Recipes } from './pages/recipes/recipes';
 import { FavoriteRecipes } from './pages/favorite-recipes/favorite-recipes';
 import { CreateRecipe } from './pages/create-recipe/create-recipe';
 import { Login } from './pages/login/login';
+import { ProfileDashboard } from './pages/profile-dashboard/profile-dashboard';
+import { Register } from './pages/register/register';
 
 export const routes: Routes = [
   {
@@ -35,6 +37,16 @@ export const routes: Routes = [
   {
     path: 'Login',
     component: Login,
+    data: { showNavbar: true }
+  },
+  {
+    path: 'Register',
+    component: Register,
+    data: { showNavbar: true }
+  },
+  {
+    path: 'Profile',
+    component: ProfileDashboard,
     data: { showNavbar: true }
   },
   {

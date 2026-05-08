@@ -23,13 +23,13 @@
           </a>
         </li>
         <li>
-          <a [routerLink]="['/Recipe-List']">
+          <a [routerLink]="AService.isLoggedIn() ? '/Profile' : '/Login'">
             Profile
           </a>
         </li>
         @if(AService.isLoggedIn()) {
         <li>
-          <a [routerLink]="['/Home']" (click)="this.AService.tryLogout()">
+          <a [routerLink]="['/Home']" (click)="logout()">
             Log out
           </a>
         </li>
@@ -73,11 +73,11 @@
               <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Favorite-Recipes']">Favorite Recipes</button>
             </li>
             <li>
-              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="['/Recipe-List']">Profile</button>
+              <button class="header_drawer-link" (click)="toggleSidebar()" [routerLink]="AService.isLoggedIn() ? '/Profile' : '/Login'">Profile</button>
             </li>
             @if(AService.isLoggedIn()){
             <li>
-              <button class="header_drawer-link" (click)="toggleSidebar(); logout()" [routerLink]="['/Login']">Log out</button>
+              <button class="header_drawer-link" (click)="toggleSidebar(); logout()" [routerLink]="['/Home']">Log out</button>
             </li>
             } @else {
             <li>

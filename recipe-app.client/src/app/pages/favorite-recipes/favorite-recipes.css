@@ -21,7 +21,6 @@ header, .loading-text {
 .loading-text {
   animation: loadingAnimation 2s infinite;
   animation-direction: alternate;
-  place-self: center;
 }
 
 .container {

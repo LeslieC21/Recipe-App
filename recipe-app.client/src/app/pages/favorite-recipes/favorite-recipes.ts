@@ -1,13 +1,13 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { form, debounce, FormField } from '@angular/forms/signals';
-import { map } from 'rxjs'
+import { map, catchError } from 'rxjs'
 
 import { Recipe } from '../recipes/recipe/recipe';
 import { RecipeModel } from '../../core/models/RecipeModel';
 import { TagModel } from '../../core/models/TagModel';
 import { IngredientModel } from '../../core/models/IngredientModel';
 import { RecipeService } from '../../core/services/RecipeService';
+import { AuthService } from '../../core/services/AuthService';
 
 interface SearchModel {
   recipeName: string;
@@ -24,6 +24,7 @@ interface SearchModel {
 export class FavoriteRecipes {
   // Injects
   RService = inject(RecipeService);
+  AService = inject(AuthService);
   destroyRef = inject(DestroyRef);
 
   viewSingleRecipe = signal<string | null>(null);
@@ -32,7 +33,7 @@ export class FavoriteRecipes {
   tags = signal<TagModel[]>([]);
   ingredients = signal<IngredientModel[]>([]);
   showSearchCriteria = signal<boolean>(false);
-  searchTitleValue = signal<string>('');
+  message = signal<string>('');
 
   // Search Forms
   searchModel = signal<SearchModel>({
@@ -48,8 +49,16 @@ export class FavoriteRecipes {
   // Method that holds the API request
   getFavoriteRecipes() {
     this.isLoading.set(true);
+    this.message.set("Loading Recipes");
     const subscription = this.RService.getUserFavoriteRecipes()
       .pipe(
+        catchError((error) => {
+          if (error.status === 401) {
+            this.message.set("Log in to see your favorite recipes");
+          }
+
+          return ([]);
+        }),
         map(switchMap => {
           switchMap.forEach((recipe) => {
             if (recipe.image) {
@@ -65,6 +74,9 @@ export class FavoriteRecipes {
       .subscribe(x => {
         this.recipes.set(x);
         this.isLoading.set(false);
+        if (this.recipes.length == 0) {
+          this.message.set("No Favorite Recipes");
+        }
       });
     this.destroyRef.onDestroy(() => {
       subscription.unsubscribe();

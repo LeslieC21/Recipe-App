@@ -1,4 +1,4 @@
-import { IngredientInfoModel } from './IngredientInfoModel';
+import { IngredientInfoModel } from '../IngredientInfoModel';
 
 export interface CreateRecipeModel {
   Name: string,

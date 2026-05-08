@@ -1,0 +1,60 @@
+<div class="container">
+    <div class="container-outer">
+        <div class="container-inner">
+            <!-- Didnt Return A User - Dont Display -->
+            @if(user().username == "") {
+            <header>
+                <h2>Welcome {{ user().username }}</h2>
+            </header>
+            <h3 class="info-header">Heres what we know about you!</h3>
+            <main>
+                <div class="group">
+                    <div class="item">
+                        <h3>Name</h3>
+                        <div>
+                            @if(!showEditPage()) {
+                            <p>{{ user().firstName }} {{ user().lastName }}</p>
+                            } @else {
+                            <input type="text" placeholder="Enter First Name..." />
+                            <input type="text" placeholder="Enter Last Name..." />
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="item">
+                        <h3>Phone Number</h3>
+                        @if(!showEditPage()) {
+                        <p>{{ user().phoneNumber ?? "No Phone Number Listed..."}}</p>
+                        } @else {
+                        <input type="text" placeholder="Enter Phone Number..."/>
+                        }
+                    </div>
+
+                    <div class="item">
+                        <h3>Email</h3>
+                        @if(!showEditPage()) {
+                        <p>{{ user().email ?? "No Email Listed..."}}</p>
+                        } @else {
+                        <input type="text" placeholder="Enter Phone Number..." />
+                        }
+                    </div>
+                </div>
+            </main>
+            <footer>
+                @if(!showEditPage()) {
+                <h3 class="info-header">Actions</h3>
+                <div class="action_buttons">
+                    <button class="action_button">Change Username</button>
+                    <button class="action_button">Change Password</button>
+                    <button class="action_button" (click)="showEditPage.set(true)">Edit Profile</button>
+                </div>
+                } @else {
+                <button class="action_button" (click)="updateUserProfile()">Save Edits</button>
+                <button class="action_button" (click)="showEditPage.set(false)">Cancel Edits</button>
+                }
+            </footer>
+            }
+        </div>
+    </div>
+</div>

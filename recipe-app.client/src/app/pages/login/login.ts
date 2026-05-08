@@ -1,10 +1,9 @@
 import { Component, signal, inject, DestroyRef } from '@angular/core';
 import { form, required, debounce, FormField } from '@angular/forms/signals';
 import { catchError, EMPTY } from 'rxjs';
-import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/services/AuthService';
-import { Header } from '../../layout/header/header';
 
 interface LoginModel {
   username: string;
@@ -13,7 +12,7 @@ interface LoginModel {
 
 @Component({
   selector: 'app-login',
-  imports: [FormField],
+  imports: [FormField, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
@@ -34,8 +33,8 @@ export class Login {
   })
 
   loginForm = form(this.loginModel, (schemaPath) => {
-    required(schemaPath.username, { message: "Please enter a username."});
-    required(schemaPath.password, { message: "Please enter a password." });
+    required(schemaPath.username, { message: "This field is required."});
+    required(schemaPath.password, { message: "This field is required." });
 
     debounce(schemaPath.username, 300);
     debounce(schemaPath.password, 300);
@@ -45,8 +44,9 @@ export class Login {
     event.preventDefault();
     this.errorMessage.set(null);
 
-    if (this.loginForm().invalid()) 
+    if (this.loginForm().invalid()) {
       return;
+    }
 
     const subscription = this.AService.tryLogin(this.loginModel()).pipe(
       catchError(error => {

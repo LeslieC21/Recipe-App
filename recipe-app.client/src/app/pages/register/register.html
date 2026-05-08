@@ -1,24 +1,114 @@
 <div class="container">
-  <h1>Welcome to Delish-ipes</h1>
-  <h2>Create An Account Below!</h2>
   <form>
-    <div class="form-group">
-      <input type="text" placeholder="First Name" />
-      <input type="text" placeholder="Last Name" />
-    </div>
-    <div class="form-group">
-      <input type="text" placeholder="Username" />
-    </div>
-    <div class="form-group">
-      <input type="password" placeholder="Password" />
-    </div>
-    <div class="form-group">
-      <input type="tel" placeholder="Phone Number" />
-      <input type="email" placeholder="Email" />
-    </div>
-    <div class="form-group">
-      <button>Create Account</button>
-    </div>
+    <div class="form_inner">
+      <header>
+        <h1>Welcome to Delish-ipes</h1>
+        <h2>Create An Account Below!</h2>
+      </header>
+      <div class="form-group">
+        <div class="form-group-item">
+          <input type="text" placeholder="First Name" [formField]="registerForm.firstName" [class.invalid]="registerForm.firstName().touched() && registerForm.firstName().invalid()"/>
+          @if(registerForm.firstName().touched() && registerForm.firstName().invalid())
+          {
+            <ul class="error-list">
+              @for(error of registerForm.firstName().errors(); track $index)
+              {
+              <li class="error-message">{{error.message}}</li>
+              }
+            </ul>
+          }
+        </div>
+        <div class="form-group-item">
+          <input type="text" placeholder="Last Name" [formField]="registerForm.lastName" [class.invalid]="registerForm.lastName().touched() && registerForm.lastName().invalid()"/>
+          @if(registerForm.lastName().touched() && registerForm.lastName().invalid())
+          {
+          <ul class="error-list">
+            @for(error of registerForm.lastName().errors(); track $index)
+            {
+            <li class="error-message">{{error.message}}</li>
+            }
+          </ul>
+          }
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-group-item">
+          <input type="text" placeholder="Username" [formField]="registerForm.username" [class.invalid]="registerForm.username().touched() && registerForm.username().invalid()"/>
+          @if(registerForm.username().touched() && registerForm.username().invalid())
+          {
+          <ul class="error-list">
+            @for(error of registerForm.username().errors(); track $index)
+            {
+            <li class="error-message">{{error.message}}</li>
+            }
+          </ul>
+          }
+        </div>
+        </div>
+      <div class="form-group">
+        <div class="form-group-item">
+          <input type="password" placeholder="Password" [formField]="registerForm.password" [class.invalid]="registerForm.password().touched() && registerForm.password().invalid()"/>
+          @if(registerForm.password().touched() && registerForm.password().invalid())
+          {
+          <ul class="error-list">
+            @for(error of registerForm.password().errors(); track $index)
+            {
+            <li class="error-message">{{error.message}}</li>
+            }
+          </ul>
+          }
+        </div>
+        </div>
+      <div class="form-group">
+        <div class="form-group-item">
+          <input type="password" placeholder="Confirm Password" [formField]="registerForm.confirmPassword" [class.invalid]="registerForm.confirmPassword().touched() && registerForm.confirmPassword().invalid()"/>
+          @if(registerForm.confirmPassword().touched() && registerForm.confirmPassword().invalid())
+          {
+          <ul class="error-list">
+            @for(error of registerForm.confirmPassword().errors(); track $index)
+            {
+            <li class="error-message">{{error.message}}</li>
+            }
+          </ul>
+          }
+        </div>
+        </div>
+      <div class="form-group">
+        <div class="form-group-item">
+          <input type="tel" placeholder="Phone Number" [formField]="registerForm.phone" [class.invalid]="registerForm.phone().touched() && registerForm.phone().invalid()"/>
+          @if(registerForm.phone().touched() && registerForm.phone().invalid())
+          {
+          <ul class="error-list">
+            @for(error of registerForm.phone().errors(); track $index)
+            {
+            <li class="error-message">{{error.message}}</li>
+            }
+          </ul>
+          }
+        </div>
+        <div class="form-group-item">
+          <input type="email" placeholder="Email" [formField]="registerForm.email" [class.invalid]="registerForm.email().touched() && registerForm.email().invalid()"/>
+          @if(registerForm.email().touched() && registerForm.email().invalid())
+          {
+          <ul class="error-list">
+            @for(error of registerForm.email().errors(); track $index)
+            {
+            <li class="error-message">{{error.message}}</li>
+            }
+          </ul>
+          }
+        </div>
+        </div>
+        <div class="form-group">
+          <button class="form_submit-button" (click)="tryRegister($event)">Create Account</button>
+        </div>
+        <footer>
+          <div class="form-group">
+            <label for="registerBtn">Already have an account?</label>
+            <a id="registerBtn" [routerLink]="['/Login']">Login</a>
+          </div>
+        </footer>
+      </div>
   </form>
 </div>
 

@@ -22,6 +22,7 @@ export class Header {
     this.isSidebarVisible.update(s => !s);
   }
 
+  // DOESNT WORK
   logout() {
     const subscription = this.AService.tryLogout()
       .subscribe();

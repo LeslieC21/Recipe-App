@@ -43,9 +43,9 @@
     }
     }
   </header>
-  @if(isLoading()) {
-  <h1 class="loading-text">
-    Loading Recipes
+  @if(isLoading() || recipes().length == 0) {
+  <h1 class="loading-text" [style.animation]="isLoading() ? 'loadingAnimation 2s infinite' : 'none'">
+    {{message()}}
     <span>...</span>
   </h1>
   } @else {

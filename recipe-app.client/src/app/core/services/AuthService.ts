@@ -1,10 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 
 import { LoginRequest } from '../models/RequestModels/LoginRequest';
 import { RegisterRequest } from '../models/RequestModels/RegisterRequest';
+import { UserModel } from '../models/UserModel';
 
 
 @Injectable({
@@ -20,10 +21,6 @@ export class AuthService {
   readonly isLoggedIn = this.loggedIn.asReadonly();
 
   private checkCookie() {
-    console.log(document.cookie
-      .split(';')
-      .find(index => index.startsWith('logged_in'))
-      ?.split('=')[1] === 'true');
     return document.cookie
       .split(';')
       .find(index => index.startsWith('logged_in'))
@@ -52,10 +49,14 @@ export class AuthService {
   }
 
   tryRegister(request: RegisterRequest): Observable<any> {
-    return this.httpClient.post('/Token/Register', request);
+    return this.httpClient.post<boolean>('/Token/Register', request);
   }
 
   refresh():Observable<any> {
-    return this.httpClient.post('Token/Refresh', {});
+    return this.httpClient.post('/Token/Refresh', {});
+  }
+
+  getUserInfo() {
+    return this.httpClient.get<UserModel>('/Token/User');
   }
 }

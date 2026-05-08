@@ -32,6 +32,7 @@ form {
   justify-content: center;
   box-sizing: border-box;
   width: 100%;
+  margin: 0.5rem;
 }
 
 .form-group input {
@@ -40,11 +41,12 @@ form {
     padding: .5rem;
 }
 
-h1, h2, h3 {
-    font-family: var(--font-unkempt);
-    color: var(--color-text);
-    padding: 0;
-    margin: 1rem;
+header {
+  font-family: var(--font-unkempt);
+  color: var(--color-text);
+  padding: 0;
+  margin: 1rem;
+  border-bottom: 2px solid var(--color-text);
 }
 
 button {
@@ -59,8 +61,31 @@ button {
   font-size: 20px;
   text-shadow: var(--shadow-sm);
   margin: 2rem;
+  width: 100%;
+  padding: 0.5rem;
 }
 
 button:hover {
   background-color: #e1e1e1e2;
+}
+
+.error-message {
+    margin: 0rem;
+    color: #e50000;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+a {
+  color: #6c3084;
+}
+
+footer .form-group {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
 }

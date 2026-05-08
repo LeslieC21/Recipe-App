@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens.Experimental;
 using Recipe_App.Server.Data;
 using Recipe_App.Server.DTOs.Token;
 using Recipe_App.Server.Models;
@@ -14,7 +15,7 @@ namespace Recipe_App.Server.Services
 {
     public class TokenService(RecipeDatabaseContext _context, IConfiguration _configuration, IHttpContextAccessor _httpContextAccessor) : ITokenService
     {
-        public async Task<TokenResponse?> RegisterUserAsync(CreateProfileRequest request)
+        public async Task<bool?> RegisterUserAsync(CreateProfileRequest request)
         {
             // Check if username already exists
             if (await _context.Users.AnyAsync(u => u.Username.Equals(request.Username)))
@@ -43,13 +44,14 @@ namespace Recipe_App.Server.Services
                 Username = request.Username
             };
 
-            return new TokenResponse
-            {
-                token = CreateToken(userLogin)
-            };
+            // Create Token
+            CreateToken(userLogin);
+
+            // Success
+            return true;
         }
 
-        public async Task<TokenResponse?> LoginUserAsync(LoginUserRequest request)
+        public async Task<bool?> LoginUserAsync(LoginUserRequest request)
         {
             // Find the username that wants to log in
             var user = await _context.Users
@@ -74,19 +76,20 @@ namespace Recipe_App.Server.Services
                 Username = request.Username
             };
 
-            return new TokenResponse
-            {
-                token = CreateToken(userLogin)
-            };
+            // Create Token
+            CreateToken(userLogin);
+
+            // Success
+            return true;
         }
 
         public async Task<bool> LogoutUserAsync()
         {
             // Delete refresh token from db
-            if (_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("refresh_token", out var refreshToken))
+            if (_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("auth_token", out var authToken))
             {
                 var storedToken = await _context.RefreshTokens
-                    .FirstOrDefaultAsync(r => r.TokenId.Equals(refreshToken));
+                    .FirstOrDefaultAsync(r => r.TokenId.Equals(authToken));
 
                 if (storedToken != null)
                 {
@@ -103,7 +106,7 @@ namespace Recipe_App.Server.Services
             return true;
         }
 
-        public async Task<TokenResponse?> RefreshAsync()
+        public async Task<bool?> RefreshAsync()
         {
             // Read the refresh token from its own cookie
             if (!_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("refresh_token", out var refreshToken))
@@ -128,13 +131,126 @@ namespace Recipe_App.Server.Services
                 Username = storedToken.User.Username
             };
 
-            var token = CreateToken(userLogin);
+            // Create Token
+            CreateToken(userLogin);
             await CreateRefreshToken(userLogin);
 
-            return new TokenResponse
-            {
-                token = token
-            };
+            // Success
+            return true;
+        }
+
+        public async Task<GetUserDataResponse> GetUserDataAsync()
+        {
+            var Claims = await ValidateToken();
+
+            if (Claims is null)
+                return new GetUserDataResponse();
+
+            // Token is valid - read the claims and grab userId
+            var userId = Claims
+                        .First(c => c.Key == ClaimTypes.NameIdentifier)
+                        .Value?.ToString();
+
+
+            // Grab user with that id from the db
+            var existingUser = await _context.Users
+                .Where(u => u.UserId.Equals(userId))
+                .Select(u => new GetUserDataResponse
+                {
+                    Username = u.Username,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    PhoneNumber = u.PhoneNumber,
+                    Email = u.Email
+                })
+                .FirstOrDefaultAsync();
+
+            if (existingUser is null)
+                return new GetUserDataResponse();
+
+            // Return the user
+            var returnType = existingUser.GetType();
+            return existingUser;
+        }
+
+        // Method that will return true if the username is used
+        public async Task<bool> CheckUsernameAsync(string username)
+        {
+            var existingUsername = await _context.Users
+                .AnyAsync(u => u.Username.Equals(username));
+
+            return existingUsername;
+        }
+
+        // Method to update a users information
+        public async Task<bool> UpdateUserInfoAsync(UpdateUserInfoRequest request)
+        {
+            // Method call to get the userId of the logged in user using cookies
+            var userId = await GetUserId();
+
+            // Get the user from the db that matches the userId
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId.Equals(userId));
+
+            // If the user is not found in the db - return false
+            if (existingUser is null)
+                return false;
+
+            existingUser.FirstName = request.FirstName;
+            existingUser.LastName = request.LastName;
+            existingUser.PhoneNumber = request.Phone ?? null;
+            existingUser.Email = request.Email ?? null;
+
+            // Save changes
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
+        }
+
+        // Method to change a users username
+        public async Task<bool> UpdateUsernameAsync(UpdateUsernameRequest request)
+        {
+            // Method to get the userId that is logged in
+            var userId = await GetUserId();
+            if (userId is null) return false;
+
+            // Check if username exists in the db already
+            var exists = await CheckUsernameAsync(request.Username);
+            if (exists) return false;
+
+            // Grab the user and change their username
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId.Equals(userId));
+            if (user is null) return false;
+            user.Username = request.Username;
+
+            // Save changes
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
+        }
+
+        // Method to change a users password
+        public async Task<bool> UpdateUserPasswordAsync(UpdateUserPasswordRequest request)
+        {
+            // Grab user id
+            var userId = await GetUserId();
+            if (userId is null) return false;
+
+            // Grab the user
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId.Equals(userId));
+            if (user is null) return false;
+
+            // Change password and save
+            user.PasswordHash = new PasswordHasher<Users>()
+                .HashPassword(user, request.Password);
+            await _context.SaveChangesAsync();
+
+            // Success!
+            return true;
         }
 
         // Private method to create a token for user login
@@ -222,6 +338,76 @@ namespace Recipe_App.Server.Services
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddMinutes(30)
             });
+        }
+
+        private async Task<string?> GetUserId()
+        {
+            // Get the tokens claims from cookie
+            var Claims = await ValidateToken();
+
+            // If there isnt a user logged in - return false
+            if (Claims is null)
+                return null;
+
+            // Grab the userId from the claims
+            var userId = Claims
+                .First(c => c.Key == ClaimTypes.NameIdentifier)
+                .Value?.ToString();
+
+            return userId;
+        }
+
+        private async Task<IDictionary<string, Object>?> ValidateToken()
+        {
+            // Grab the user that is logged in
+            if (!_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("auth_token", out var strToken))
+                // No logged in user was found
+                return null;
+
+            // Grab the key the Jwt was made with - needed for validation to work
+            var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_configuration.GetValue<string>("AppSettings:Token")!)
+            );
+
+            // What we need to check is valid/correct
+            var validationParameters = new TokenValidationParameters()
+            {
+                IssuerSigningKey = key,
+                ValidIssuer = _configuration.GetValue<string>("AppSettings:Issuer"),
+                ValidAudience = _configuration.GetValue<string>("AppSettings:Audience"),
+                ValidateLifetime = true,
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidateIssuerSigningKey = true
+            };
+
+            // We have a logged in user, grab the token and validate it
+            var handler = new JwtSecurityTokenHandler();
+            var Validtoken = await handler.ValidateTokenAsync(strToken, validationParameters);
+
+            // Check if its valid aka no subject to any attacks or changes since it was signed
+            if (!Validtoken.IsValid)
+            {
+                // Invalid token clear the cookies
+                _httpContextAccessor.HttpContext!.Response.Cookies.Delete("auth_token");
+                _httpContextAccessor.HttpContext!.Response.Cookies.Delete("refresh_token");
+                _httpContextAccessor.HttpContext!.Response.Cookies.Delete("logged_in");
+
+                // Delete stored refresh token too in case it was stolen and modified
+                var existingRefreshToken = await _context.RefreshTokens
+                    .FirstOrDefaultAsync(r => r.Token.Equals(strToken));
+
+                if (existingRefreshToken != null)
+                {
+                    _context.Remove(existingRefreshToken);
+                }
+
+                return null;
+            }
+
+            var c = Validtoken.Claims;
+            // Token is valid
+            return Validtoken.Claims;
         }
     }
 }
