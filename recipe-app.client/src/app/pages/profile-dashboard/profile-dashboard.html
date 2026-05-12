@@ -1,60 +1,128 @@
 <div class="container">
     <div class="container-outer">
-        <div class="container-inner">
-            <!-- Didnt Return A User - Dont Display -->
-            @if(user().username == "") {
-            <header>
-                <h2>Welcome {{ user().username }}</h2>
-            </header>
-            <h3 class="info-header">Heres what we know about you!</h3>
-            <main>
-                <div class="group">
-                    <div class="item">
-                        <h3>Name</h3>
-                        <div>
-                            @if(!showEditPage()) {
-                            <p>{{ user().firstName }} {{ user().lastName }}</p>
-                            } @else {
-                            <input type="text" placeholder="Enter First Name..." />
-                            <input type="text" placeholder="Enter Last Name..." />
-                            }
-                        </div>
-                    </div>
-                </div>
-                <div class="group">
-                    <div class="item">
-                        <h3>Phone Number</h3>
-                        @if(!showEditPage()) {
-                        <p>{{ user().phoneNumber ?? "No Phone Number Listed..."}}</p>
-                        } @else {
-                        <input type="text" placeholder="Enter Phone Number..."/>
-                        }
-                    </div>
-
-                    <div class="item">
-                        <h3>Email</h3>
-                        @if(!showEditPage()) {
-                        <p>{{ user().email ?? "No Email Listed..."}}</p>
-                        } @else {
-                        <input type="text" placeholder="Enter Phone Number..." />
-                        }
-                    </div>
-                </div>
-            </main>
-            <footer>
+      <div class="container-inner">
+        <header>
+          <h2>Welcome {{ user().username }}</h2>
+        </header>
+        <h3 class="info-header">Heres what we know about you!</h3>
+        <main>
+          <div class="group">
+            <div class="item">
+              <h3>Name</h3>
+              <div class="edit-names">
                 @if(!showEditPage()) {
-                <h3 class="info-header">Actions</h3>
-                <div class="action_buttons">
-                    <button class="action_button">Change Username</button>
-                    <button class="action_button">Change Password</button>
-                    <button class="action_button" (click)="showEditPage.set(true)">Edit Profile</button>
-                </div>
+                <p>{{ user().firstName }} {{ user().lastName }}</p>
                 } @else {
-                <button class="action_button" (click)="updateUserProfile()">Save Edits</button>
-                <button class="action_button" (click)="showEditPage.set(false)">Cancel Edits</button>
+                <input type="text" placeholder="Enter First Name..." [formField]="userForm.firstName" [class.invalid]="userForm.firstName().touched() && userForm.firstName().invalid()"/>
+                <input type="text" placeholder="Enter Last Name..." [formField]="userForm.lastName" [class.invalid]="userForm.lastName().touched() && userForm.lastName().invalid()"/>
+
+                @if(userForm.firstName().touched() && userForm.firstName().invalid())
+                {
+                <ul class="error-list">
+                  @for(error of userForm.firstName().errors(); track $index)
+                  {
+                  <li class="error-message">{{error.message}}</li>
+                  }
+                </ul>
                 }
-            </footer>
-            }
-        </div>
+
+                @if(userForm.lastName().touched() && userForm.lastName().invalid())
+                {
+                <ul class="error-list">
+                  @for(error of userForm.lastName().errors(); track $index)
+                  {
+                  <li class="error-message">{{error.message}}</li>
+                  }
+                </ul>
+                }
+
+                }
+              </div>
+            </div>
+          </div>
+          <div class="group">
+            <div class="item">
+              <h3>Phone Number</h3>
+              @if(!showEditPage()) {
+              <p>{{ user().phoneNumber ?? "No Phone Number Listed..."}}</p>
+              } @else {
+              <input type="text" placeholder="Enter Phone Number..." [formField]="userForm.phoneNumber" [class.invalid]="userForm.phoneNumber().touched() && userForm.phoneNumber().invalid()"/>
+              @if(userForm.phoneNumber().touched() && userForm.phoneNumber().invalid())
+              {
+              <ul class="error-list">
+                @for(error of userForm.phoneNumber().errors(); track $index)
+                {
+                <li class="error-message">{{error.message}}</li>
+                }
+              </ul>
+              }
+              }
+            </div>
+
+            <div class="item">
+              <h3>Email</h3>
+              @if(!showEditPage()) {
+              <p>{{ user().email ?? "No Email Listed..."}}</p>
+              } @else {
+              <input type="text" placeholder="Enter Phone Number..." [formField]="userForm.email" [class.invalid]="userForm.email().touched() && userForm.email().invalid()"/>
+              @if(userForm.email().touched() && userForm.email().invalid())
+              {
+              <ul class="error-list">
+                @for(error of userForm.email().errors(); track $index)
+                {
+                <li class="error-message">{{error.message}}</li>
+                }
+              </ul>
+              }
+              }
+            </div>
+          </div>
+        </main>
+        <footer>
+          @if(!showEditPage()) {
+          <h3 class="info-header">Actions</h3>
+          <div class="action_buttons">
+            <button class="action_button" (click)="showModal.set(1)">Change Username</button>
+            <button class="action_button" (click)="showModal.set(2)">Change Password</button>
+            <button class="action_button" (click)="showEditPage.set(true)">Edit Profile</button>
+          </div>
+          } @else {
+          <button class="action_button" (click)="updateUserProfile($event)">Save Edits</button>
+          <button class="action_button" (click)="showEditPage.set(false)">Cancel Edits</button>
+          }
+        </footer>
+      </div>
     </div>
 </div>
+
+
+<!--Modal-->
+@if(showModal() != 0) {
+<div class="modal-container">
+  <div class="modal-inner">
+    <div class="modal-title">
+      @if(showModal() == 1) {
+      <h1>Update Username</h1>
+      } @else {
+      <h1>Update Password</h1>
+      }
+    </div>
+    <div class="modal-body">
+      @if(showModal() == 1) {
+      <label for="newUsername">Enter your new username: </label>
+      <input id="newUsername" placeholder="New Username..." [(ngModel)]="updatedUserItem" />
+      @if(wasUsernameTaken()) {
+      <p class="error-message">Username is taken.</p>
+      }
+      } @else {
+      <label for="newPassword">Enter your new password: </label>
+      <input id="newPassword" placeholder="New Password..." [(ngModel)]="updatedUserItem" />
+      }
+    </div>
+    <div class="modal-buttons">
+      <button (click)="handleUpdateUsernameOrPassword()">Save</button>
+      <button (click)="showModal.set(0)">Cancel</button>
+    </div>
+  </div>
+</div>
+}

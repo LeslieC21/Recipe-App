@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.IdentityModel.Tokens.Experimental;
 using Recipe_App.Server.Data;
 using Recipe_App.Server.DTOs.Token;
 using Recipe_App.Server.Models;
@@ -45,7 +43,8 @@ namespace Recipe_App.Server.Services
             };
 
             // Create Token
-            CreateToken(userLogin);
+            await CreateToken(userLogin);
+            await CreateRefreshToken(userLogin);
 
             // Success
             return true;
@@ -77,7 +76,8 @@ namespace Recipe_App.Server.Services
             };
 
             // Create Token
-            CreateToken(userLogin);
+            await CreateToken(userLogin);
+            await CreateRefreshToken(userLogin);
 
             // Success
             return true;
@@ -85,25 +85,42 @@ namespace Recipe_App.Server.Services
 
         public async Task<bool> LogoutUserAsync()
         {
-            // Delete refresh token from db
-            if (_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("auth_token", out var authToken))
-            {
-                var storedToken = await _context.RefreshTokens
-                    .FirstOrDefaultAsync(r => r.TokenId.Equals(authToken));
-
-                if (storedToken != null)
+                // Delete refresh token from db
+                if (_httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("auth_token", out var authToken))
                 {
-                    _context.RefreshTokens.Remove(storedToken);
-                    await _context.SaveChangesAsync();
+                    var storedToken = await _context.RefreshTokens
+                        .FirstOrDefaultAsync(r => r.TokenId.Equals(authToken));
+
+                    if (storedToken != null)
+                    {
+                        _context.RefreshTokens.Remove(storedToken);
+                        await _context.SaveChangesAsync();
+                    }
                 }
-            }
 
-            // Clear both cookies
-            _httpContextAccessor.HttpContext!.Response.Cookies.Delete("auth_token");
-            _httpContextAccessor.HttpContext!.Response.Cookies.Delete("refresh_token");
-            _httpContextAccessor.HttpContext!.Response.Cookies.Delete("logged_in");
+                // Clear both cookies
+                _httpContextAccessor.HttpContext!.Response.Cookies.Delete("auth_token", new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict
+                });
+                _httpContextAccessor.HttpContext!.Response.Cookies.Delete("refresh_token", new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict
+                });
+                _httpContextAccessor.HttpContext!.Response.Cookies.Delete("logged_in", new CookieOptions
+                {
+                    Path = "/",
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                });
 
-            return true;
+                var s = true;
+
+                return true;
         }
 
         public async Task<bool?> RefreshAsync()
@@ -115,7 +132,7 @@ namespace Recipe_App.Server.Services
             // Look up refresh token in the db
             var storedToken = await _context.RefreshTokens
                 .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.Token.Equals(refreshToken));
+                .FirstOrDefaultAsync(r => r.Token == refreshToken);
 
             if (storedToken == null || storedToken.ExpiresAt < DateTime.UtcNow)
                 return null;
@@ -131,8 +148,28 @@ namespace Recipe_App.Server.Services
                 Username = storedToken.User.Username
             };
 
+            // Clear both cookies
+            _httpContextAccessor.HttpContext!.Response.Cookies.Delete("auth_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            });
+            _httpContextAccessor.HttpContext!.Response.Cookies.Delete("refresh_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            });
+            _httpContextAccessor.HttpContext!.Response.Cookies.Delete("logged_in", new CookieOptions
+            {
+                Path = "/",
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+            });
+
             // Create Token
-            CreateToken(userLogin);
+            await CreateToken(userLogin);
             await CreateRefreshToken(userLogin);
 
             // Success
@@ -256,7 +293,7 @@ namespace Recipe_App.Server.Services
         // Private method to create a token for user login
         // Store it in a cookie
         // THIS IS SHORT-LIVED
-        private string CreateToken(CreateTokenRequest user)
+        private async Task<string> CreateToken(CreateTokenRequest user)
         {
             var claims = new List<Claim>
             {
@@ -308,14 +345,16 @@ namespace Recipe_App.Server.Services
         // so that if a refresh token is stolen, it can only be used once before it
         // is invalidated
         // For this app not invalidating it would be fine.
-        private async Task CreateRefreshToken(CreateTokenRequest request)
+        private async Task CreateRefreshToken(CreateTokenRequest user)
         {
             var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+            if (user.UserId is null) return;
 
             var refreshToken = new RefreshTokens
             {
                 Token = token,
-                UserId = request.UserId,
+                UserId = user.UserId,
                 ExpiresAt = DateTime.UtcNow.AddDays(7)
             };
 
@@ -329,14 +368,6 @@ namespace Recipe_App.Server.Services
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddDays(7)
-            });
-
-            // Send another cookie that CAN be read by JS so that we can toggle UI changes based on if user is logged in
-            _httpContextAccessor.HttpContext!.Response.Cookies.Append("logged_in", "true", new CookieOptions
-            {
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(30)
             });
         }
 
@@ -405,7 +436,6 @@ namespace Recipe_App.Server.Services
                 return null;
             }
 
-            var c = Validtoken.Claims;
             // Token is valid
             return Validtoken.Claims;
         }

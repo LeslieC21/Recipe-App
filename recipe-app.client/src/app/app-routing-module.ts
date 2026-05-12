@@ -7,6 +7,7 @@ import { CreateRecipe } from './pages/create-recipe/create-recipe';
 import { Login } from './pages/login/login';
 import { ProfileDashboard } from './pages/profile-dashboard/profile-dashboard';
 import { Register } from './pages/register/register';
+import { loggedInGuard } from '../app/core/services/Guards/LoggedInGuard';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,7 @@ export const routes: Routes = [
   {
     path: 'Favorite-Recipes',
     component: FavoriteRecipes,
+    canActivate: [loggedInGuard],
     data: { showNavbar: true }
   },
   {
@@ -47,6 +49,7 @@ export const routes: Routes = [
   {
     path: 'Profile',
     component: ProfileDashboard,
+    canActivate: [loggedInGuard],
     data: { showNavbar: true }
   },
   {

@@ -6,6 +6,9 @@ import { Router } from '@angular/router';
 import { LoginRequest } from '../models/RequestModels/LoginRequest';
 import { RegisterRequest } from '../models/RequestModels/RegisterRequest';
 import { UserModel } from '../models/UserModel';
+import { UpdateUserInfo } from '../models/RequestModels/UpdateUserInfoModel';
+import { UpdateUsername } from '../models/RequestModels/UpdateUsernameRequest';
+import { UpdatePassword } from '../models/RequestModels/UpdatePasswordRequest';
 
 
 @Injectable({
@@ -43,7 +46,7 @@ export class AuthService {
       tap(() => {
         this.loggedIn.set(false);
         this.router.navigate(['/Home']);
-        console.log(this.checkCookie());
+        console.log("We are.." , this.checkCookie());
       })
     )
   }
@@ -52,11 +55,39 @@ export class AuthService {
     return this.httpClient.post<boolean>('/Token/Register', request);
   }
 
-  refresh():Observable<any> {
-    return this.httpClient.post('/Token/Refresh', {});
+  refresh(): Observable<any> {
+    console.log("Refreshing...");
+    return this.httpClient.post('/Token/Refresh', {}).pipe(
+      tap(() => {
+        this.loggedIn.set(this.checkCookie());
+      })
+    );
   }
 
   getUserInfo() {
     return this.httpClient.get<UserModel>('/Token/User');
+  }
+
+  updateUserInfo(updateReq: UpdateUserInfo) {
+    return this.httpClient.put<boolean>('/Token/Update/UserInfo', updateReq);
+  }
+
+  checkUsernameAvaliability(username: string) {
+    return this.httpClient.get<boolean>(`/Token/IsUsernameTaken/${username}`);
+  }
+
+  updateUsername(username: string) {
+    var updateReq: UpdateUsername = {
+      Username: username
+    }
+
+    return this.httpClient.put<boolean>('/Token/Update/Username', updateReq);
+  }
+
+  updatePassword(password: string) {
+    var updateReq: UpdatePassword = {
+      Password: password
+    }
+    return this.httpClient.put<boolean>('/Token/Update/Password', updateReq);
   }
 }

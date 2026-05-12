@@ -25,7 +25,9 @@ export class Header {
   // DOESNT WORK
   logout() {
     const subscription = this.AService.tryLogout()
-      .subscribe();
+      .subscribe(x => {
+        console.log(x);
+      });
     this.destroyRef.onDestroy(() => {
       subscription.unsubscribe();
     });
